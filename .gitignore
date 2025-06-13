@@ -3,3 +3,5 @@
 .secrets.*
 dist
 __pycache__
+.venv
+.vscode
