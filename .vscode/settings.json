@@ -1,8 +1,0 @@
-{
-    "python.analysis.extraPaths": [
-        "./kolja_aws"
-    ],
-    "cSpell.words": [
-        "adpn"
-    ]
-}
