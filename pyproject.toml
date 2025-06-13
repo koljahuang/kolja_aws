@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "kolja-aws"
+version = "0.1.0"
+description = ""
+authors = ["kolja huang <koljahuang@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+dynaconf = "^3.2.6"
+click = "^8.1.7"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+kolja = "kolja_aws.kolja_login:cli"

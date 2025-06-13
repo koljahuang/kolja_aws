@@ -1,0 +1,2 @@
+AWS_CONFIG="~/.aws/config"
+AWS_REGION="cn-north-1"

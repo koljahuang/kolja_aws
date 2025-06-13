@@ -1,0 +1,9 @@
+[sso-session adpn-cn]
+sso_start_url = https://start.cn-north-1.home.awsapps.cn/directory/orionadp-cn-prod
+sso_region = cn-north-1
+sso_registration_scopes = sso:account:access
+
+[sso-session adpn]
+sso_start_url = https://orionadp.awsapps.com/start
+sso_region = eu-central-1
+sso_registration_scopes = sso:account:access
