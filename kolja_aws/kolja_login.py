@@ -32,12 +32,14 @@ def set(sso_sessions):
     for sso_session in sso_sessions:
         if sso_session == "adpn-cn":
             remove_block_from_config(os.path.expanduser(aws_config), f'sso-session {sso_session}')
-            section_content, _ = get_section_metadata_from_template("sso_session.template", f'sso-session {sso_session}')
+            template_path = os.path.join(os.path.dirname(__file__), "sso_session.template")
+            section_content, _ = get_section_metadata_from_template(template_path, f'sso-session {sso_session}')
             with open(os.path.expanduser(aws_config), 'a') as fw:
                 fw.write(section_content)
         elif sso_session == "adpn":
             remove_block_from_config(os.path.expanduser(aws_config), f'sso-session {sso_session}')
-            section_content, _ = get_section_metadata_from_template("sso_session.template", f'sso-session {sso_session}')
+            template_path = os.path.join(os.path.dirname(__file__), "sso_session.template")
+            section_content, _ = get_section_metadata_from_template(template_path, f'sso-session {sso_session}')
             with open(os.path.expanduser(aws_config), 'a') as fw:
                 fw.write(section_content)
     
@@ -81,7 +83,8 @@ def profiles():
         return
     for sso_session in sso_sessions:
         # print(sso_session)
-        _, section_dict = get_section_metadata_from_template("sso_session.template", f'sso-session {sso_session}')
+        template_path = os.path.join(os.path.dirname(__file__), "sso_session.template")
+        _, section_dict = get_section_metadata_from_template(template_path, f'sso-session {sso_session}')
         if section_dict:
             result = subprocess.run([
                             'aws', 'sso', 'list-accounts',
