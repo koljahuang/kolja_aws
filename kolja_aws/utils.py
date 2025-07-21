@@ -124,4 +124,4 @@ output = text
 
 if __name__ == "__main__":
     print(get_latest_tokens_by_region())
-    # print(get_section_metadata_from_template("/Users/huangchao/.aws/config", "sso-session adpn"))
+    # print(get_section_metadata_from_template("/Users/huangchao/.aws/config", "sso-session kolja"))

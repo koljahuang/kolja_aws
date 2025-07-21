@@ -30,13 +30,13 @@ def aws():
 def set(sso_sessions):
     # sso_sessions=list(sso_sessions)
     for sso_session in sso_sessions:
-        if sso_session == "adpn-cn":
+        if sso_session == "kolja-cn":
             remove_block_from_config(os.path.expanduser(aws_config), f'sso-session {sso_session}')
             template_path = os.path.join(os.path.dirname(__file__), "sso_session.template")
             section_content, _ = get_section_metadata_from_template(template_path, f'sso-session {sso_session}')
             with open(os.path.expanduser(aws_config), 'a') as fw:
                 fw.write(section_content)
-        elif sso_session == "adpn":
+        elif sso_session == "kolja":
             remove_block_from_config(os.path.expanduser(aws_config), f'sso-session {sso_session}')
             template_path = os.path.join(os.path.dirname(__file__), "sso_session.template")
             section_content, _ = get_section_metadata_from_template(template_path, f'sso-session {sso_session}')

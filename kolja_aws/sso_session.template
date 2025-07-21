@@ -1,9 +1,9 @@
-[sso-session adpn-cn]
-sso_start_url = xxxx
-sso_region = cn-north-1
+[sso-session kolja-cn]
+sso_start_url = https://start.home.awsapps.cn/directory/xxx
+sso_region = cn-northwest-1
 sso_registration_scopes = sso:account:access
 
-[sso-session adpn]
-sso_start_url = https://d-9767a20x.awsapps.com/start
+[sso-session kolja]
+sso_start_url = https://xxx/start
 sso_region = ap-southeast-2
 sso_registration_scopes = sso:account:access
