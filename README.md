@@ -15,28 +15,23 @@ git clone https://github.com/koljahuang/kolja_aws.git
 cd kolja_aws
 poetry install
 
-# Run setup script to configure security and create config files
-./scripts/setup.sh
+# Setup Git hooks for security (recommended)
+./scripts/setup-git-hooks.sh
 ```
 
 ## ⚙️ Configuration
 
 ### Initial Setup
 
-1. **Replace placeholder URLs in `settings.toml`:**
-   ```toml
-   AWS_CONFIG="~/.aws/config"
+**Replace placeholder URLs in `settings.toml`:**
+```toml
+AWS_CONFIG="~/.aws/config"
 
-   [sso_sessions.kolja-cn]
-   sso_start_url = "https://xxx.awsapps.cn/start#replace-with-your-sso-url"  # ← Replace this
-   sso_region = "cn-northwest-1"
-   sso_registration_scopes = "sso:account:access"
-   ```
-
-2. **Setup Git hooks for security (recommended):**
-   ```bash
-   ./scripts/setup-git-hooks.sh
-   ```
+[sso_sessions.kolja-cn]
+sso_start_url = "https://xxx.awsapps.cn/start#replace-with-your-sso-url"  # ← Replace this
+sso_region = "cn-northwest-1"
+sso_registration_scopes = "sso:account:access"
+```
 
 ### 🔒 Security Features
 

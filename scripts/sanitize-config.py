@@ -22,7 +22,7 @@ def sanitize_settings_toml(input_file, output_file):
     # Replace sensitive URLs
     content = re.sub(
         r'sso_start_url = "https://[^"]*"',
-        'sso_start_url = "https://your-sso-start-url.awsapps.com/start"',
+        'sso_start_url = "https://xxx.awsapps.com/start#replace-with-your-sso-url"',
         content
     )
     
@@ -104,7 +104,7 @@ def main():
     print("   1. Review the .example files")
     print("   2. Add sensitive files to .gitignore")
     print("   3. Commit only the .example files")
-    print("   4. Setup Git hooks: ./scripts/setup-git-hooks.sh")
+    print("   4. Git hooks should already be set up from installation")
 
 
 if __name__ == "__main__":
