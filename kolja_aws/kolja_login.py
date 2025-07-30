@@ -94,6 +94,7 @@ def login():
         else:
             print(f"Login failed for session: {i}")
             print(f"Error: {result.stderr}")
+            print(f"👀It is recommended to remove the local AWS_PROFILE environment variable and retry")
 
 
 @click.command()
