@@ -1,9 +1,9 @@
 [sso-session kolja-cn]
-sso_start_url = https://start.home.awsapps.cn/directory/xxx
+sso_start_url = https://xxx.awsapps.cn/start#replace-with-your-sso-url
 sso_region = cn-northwest-1
 sso_registration_scopes = sso:account:access
 
 [sso-session kolja]
-sso_start_url = https://xxx/start
+sso_start_url = https://xxx.awsapps.com/start#replace-with-your-sso-url
 sso_region = ap-southeast-2
 sso_registration_scopes = sso:account:access

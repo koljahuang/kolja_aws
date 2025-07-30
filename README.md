@@ -1,47 +1,185 @@
-## Target 🚀:
-To resolve AWS SSO login using sso-session and to build or update the profile blocks in the local AWS configuration file accordingly. Based on this setup, you can then use other AWS profile switcher tools to switch roles more easily and make your life simpler.
+# Kolja AWS CLI Tool 🚀
 
-## How to use
-- Install kolja cli
-    ```sh
-    git clone https://github.com/koljahuang/kolja_aws.git
-    cd project/root/dir
-    poetry install
-    ```
--  Nested Commands
-    ```sh
-    ~ kolja aws --help
-    Usage: kolja aws [OPTIONS] COMMAND [ARGS]...
+A powerful CLI tool that simplifies AWS SSO login management and AWS profile configuration. It automatically manages SSO sessions and generates AWS profiles, making it easier to work with multiple AWS accounts and roles.
 
-    Development commands.
+## ✨ Features
 
-    Options:
-    --help  Show this message and exit.
+- **Automatic Profile Generation**: Automatically create AWS profiles for all accessible accounts and roles
+- **SSO Session Management**: Easy setup and management of multiple SSO sessions
+- **Profile Switcher Integration**: Works seamlessly with AWS profile switcher tools like [Granted](https://granted.dev/)
 
-    Commands:
-    get
-    login
-    profiles
-    set
-    ```
-- First, `kolja aws set` would guide you to set your sso session sections `[sso-session xxx]` in your local `~/.aws/config` file.
+## 🚀 Installation
 
-- Second, `kolja profiles` would help to create/update your profiles sections in your local `~/.aws/config` file, e.g.
-    ```
-    [profile 7777777777]
-    sso_session = xxx
-    sso_account_id = 7777777777
-    sso_role_name = admin
-    region = cn-north-1
-    output = text
-    ```
+```bash
+git clone https://github.com/koljahuang/kolja_aws.git
+cd kolja_aws
+poetry install
 
-- Third, Choose to install your favorite `AWS profile switcher` and Feel free to switch accounts. Let's use [Granted](https://granted.dev/) as a demo 
-    ```sh
-    ~ assume -c
-    ? Please select the profile you would like to assume:  [Use arrows to move, type to filter]
+# Run setup script to configure security and create config files
+./scripts/setup.sh
+```
 
-    > adminnx                        
-    admin                          
-    prod             
-    ```
+## ⚙️ Configuration
+
+### Initial Setup
+
+1. **Replace placeholder URLs in `settings.toml`:**
+   ```toml
+   AWS_CONFIG="~/.aws/config"
+
+   [sso_sessions.kolja-cn]
+   sso_start_url = "https://xxx.awsapps.cn/start#replace-with-your-sso-url"  # ← Replace this
+   sso_region = "cn-northwest-1"
+   sso_registration_scopes = "sso:account:access"
+   ```
+
+2. **Setup Git hooks for security (recommended):**
+   ```bash
+   ./scripts/setup-git-hooks.sh
+   ```
+
+### 🔒 Security Features
+
+- **Smart sensitive data detection**: Prevents committing real SSO URLs while allowing placeholder URLs
+- **Pre-commit hooks**: Automatically scans for and blocks real credentials, tokens, and URLs
+- **Safe configuration**: Use 'xxx' placeholders in committed files, replace locally with real URLs
+
+## 📖 Usage
+
+### Available Commands
+
+```bash
+kolja aws --help
+```
+
+```
+Usage: kolja aws [OPTIONS] COMMAND [ARGS]...
+
+Development commands.
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  get       Get current SSO sessions
+  login     Login to SSO sessions
+  profiles  Generate AWS profiles
+  set       Set SSO session configuration
+```
+
+### Step-by-Step Workflow
+
+#### 1. Set SSO Sessions
+
+Configure your SSO sessions in the AWS config file:
+
+```bash
+kolja aws get
+```
+
+This will show available sessions from your `settings.toml`:
+```
+Available SSO sessions:
+  - kolja-cn
+  - kolja
+
+Usage: kolja aws set <session_name> [<session_name2> ...]
+```
+
+Set specific sessions:
+```bash
+kolja aws set kolja-cn kolja
+```
+
+#### 2. Login to SSO
+
+```bash
+kolja aws login
+```
+
+#### 3. Generate AWS Profiles
+
+Automatically create profiles for all accessible accounts and roles:
+
+```bash
+kolja aws profiles
+```
+
+This generates profiles like:
+```ini
+[profile 123456789012]
+sso_session = kolja-cn
+sso_account_id = 123456789012
+sso_role_name = AdminRole
+region = cn-northwest-1
+output = text
+```
+
+#### 4. Use with Profile Switchers
+
+Now you can use your favorite AWS profile switcher. Example with [Granted](https://granted.dev/):
+
+```bash
+assume -c
+```
+
+```
+? Please select the profile you would like to assume:  [Use arrows to move, type to filter]
+
+> 123456789012-AdminRole
+  123456789012-ReadOnlyRole
+  987654321098-DeveloperRole
+```
+
+## 🏗️ Architecture
+
+- **Dynamic Configuration**: SSO settings are managed in `settings.toml`
+- **Template Generation**: Automatically generates SSO session templates
+- **Profile Management**: Creates and updates AWS profiles based on accessible accounts
+- **Fallback Support**: Falls back to template files if dynamic configuration is unavailable
+
+## 🧪 Testing
+
+Run the test suite:
+
+```bash
+pytest
+```
+
+## 🔐 Security
+
+This project includes several security features to protect sensitive information:
+
+### Protected Data Patterns
+- Real SSO URLs (e.g., `https://d-xxxxxx.awsapps.com/start`)
+- AWS directory IDs (e.g., `directory/d-xxxxxx`)
+- Access tokens and secret keys
+- Real passwords and credentials
+
+### Security Scripts
+- `scripts/setup-git-hooks.sh` - Sets up Git pre-commit hooks
+- `scripts/sanitize-config.py` - Sanitizes configuration files
+
+### Git Hooks
+The pre-commit hook automatically:
+- Prevents committing sensitive files
+- Scans for sensitive patterns (URLs, tokens, keys)
+- Provides clear error messages when sensitive data is detected
+
+### Best Practices
+1. Keep 'xxx' placeholders in committed files
+2. Replace placeholders locally with your real SSO URLs
+3. Run `./scripts/setup-git-hooks.sh` after cloning
+4. Git hooks will automatically prevent committing real sensitive data
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
