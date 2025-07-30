@@ -8,11 +8,12 @@ from kolja_aws.utils import (
     get_sso_sessions,
     get_section_metadata_from_template,
     construct_role_profile_section,
+    get_available_sso_sessions,
+    get_sso_session_config,
 )
 
 
 aws_config = settings.AWS_CONFIG
-aws_region = settings.AWS_REGION
 
 
 @click.group()
@@ -28,20 +29,42 @@ def aws():
 @click.command()
 @click.argument('sso_sessions', nargs=-1)
 def set(sso_sessions):
-    # sso_sessions=list(sso_sessions)
+    """Set SSO session configuration with dynamic configuration support"""
+    available_sessions = get_available_sso_sessions()
+    
+    # If no parameters provided, show available sessions
+    if not sso_sessions:
+        print("Available SSO sessions:")
+        for session in available_sessions:
+            print(f"  - {session}")
+        print("\nUsage: kolja aws set <session_name> [<session_name2> ...]")
+        return
+    
     for sso_session in sso_sessions:
-        if sso_session == "kolja-cn":
+        if sso_session not in available_sessions:
+            print(f"Warning: SSO session '{sso_session}' not found in configuration")
+            print(f"Available sessions: {', '.join(available_sessions)}")
+            continue
+            
+        try:
+            # Remove existing configuration
             remove_block_from_config(os.path.expanduser(aws_config), f'sso-session {sso_session}')
-            template_path = os.path.join(os.path.dirname(__file__), "sso_session.template")
-            section_content, _ = get_section_metadata_from_template(template_path, f'sso-session {sso_session}')
+            
+            # Use updated utility function to get configuration content (supports dynamic configuration)
+            section_content, _ = get_section_metadata_from_template(
+                os.path.expanduser(aws_config), f'sso-session {sso_session}'
+            )
+            
+            # Write configuration
             with open(os.path.expanduser(aws_config), 'a') as fw:
+                fw.write('\n')  # Ensure line separator
                 fw.write(section_content)
-        elif sso_session == "kolja":
-            remove_block_from_config(os.path.expanduser(aws_config), f'sso-session {sso_session}')
-            template_path = os.path.join(os.path.dirname(__file__), "sso_session.template")
-            section_content, _ = get_section_metadata_from_template(template_path, f'sso-session {sso_session}')
-            with open(os.path.expanduser(aws_config), 'a') as fw:
-                fw.write(section_content)
+                fw.write('\n')  # Ensure ending line break
+            
+            print(f"✅ SSO session '{sso_session}' configuration updated")
+            
+        except Exception as e:
+            print(f"❌ Failed to set SSO session '{sso_session}': {e}")
     
 
 @click.command()
@@ -75,52 +98,68 @@ def login():
 
 @click.command()
 def profiles():
+    """Generate AWS profile sections in configuration file with dynamic configuration support"""
     latest_token = get_latest_tokens_by_region()
+    
     try:
         sso_sessions = get_sso_sessions()
     except UnboundLocalError:
-        print("pls set sso session first")
+        print("Please set SSO session first")
         return
+    
     for sso_session in sso_sessions:
-        # print(sso_session)
-        template_path = os.path.join(os.path.dirname(__file__), "sso_session.template")
-        _, section_dict = get_section_metadata_from_template(template_path, f'sso-session {sso_session}')
-        if section_dict:
-            result = subprocess.run([
-                            'aws', 'sso', 'list-accounts',
-                            "--access-token", latest_token[section_dict["sso_region"]],
-                            "--region", section_dict["sso_region"],
-                            "--output", "json",
-                        ], 
-                        stdout=subprocess.PIPE,     
-                        stderr=subprocess.PIPE,    
-                        text=True                  
-                    )
-        # TODO persist into aws.config
-        accountList = eval(result.stdout)['accountList']
-        accountIdList = map(lambda x: x['accountId'], accountList)
-        for accountId in accountIdList:
-            # print(accountId)
-            # print(latest_token[section_dict["sso_region"]])
-            # print(section_dict["sso_region"])
-            result = subprocess.run([
-                            'aws', 'sso', 'list-account-roles', '--account-id', accountId,
-                            "--access-token", latest_token[section_dict["sso_region"]],
-                            "--region", section_dict["sso_region"],
-                            "--output", "json",
-                        ], 
-                        stdout=subprocess.PIPE,     
-                        stderr=subprocess.PIPE,    
-                        text=True                  
-                    )
-            roleList = eval(result.stdout)['roleList']
-            roleNameList = map(lambda x: x['roleName'], roleList)
-            for roleName in roleNameList:
-                print(f"Dealing with accountId: {accountId}, Role: {roleName}")
-                construct_role_profile_section(
-                    os.path.expanduser(aws_config), f'profile {accountId}',
-                    sso_session, accountId, roleName, section_dict["sso_region"]
-                )
+        try:
+            # Use new utility function to get session configuration (supports dynamic configuration)
+            section_dict = get_sso_session_config(sso_session)
+            
+            if section_dict:
+                result = subprocess.run([
+                                'aws', 'sso', 'list-accounts',
+                                "--access-token", latest_token[section_dict["sso_region"]],
+                                "--region", section_dict["sso_region"],
+                                "--output", "json",
+                            ], 
+                            stdout=subprocess.PIPE,     
+                            stderr=subprocess.PIPE,    
+                            text=True                  
+                        )
+                
+                if result.returncode != 0:
+                    print(f"❌ Failed to get account list (session: {sso_session}): {result.stderr}")
+                    continue
+                
+                # TODO: Persist account information into aws.config
+                accountList = eval(result.stdout)['accountList']
+                accountIdList = map(lambda x: x['accountId'], accountList)
+                
+                for accountId in accountIdList:
+                    result = subprocess.run([
+                                    'aws', 'sso', 'list-account-roles', '--account-id', accountId,
+                                    "--access-token", latest_token[section_dict["sso_region"]],
+                                    "--region", section_dict["sso_region"],
+                                    "--output", "json",
+                                ], 
+                                stdout=subprocess.PIPE,     
+                                stderr=subprocess.PIPE,    
+                                text=True                  
+                            )
+                    
+                    if result.returncode != 0:
+                        print(f"❌ Failed to get role list (account: {accountId}): {result.stderr}")
+                        continue
+                    
+                    roleList = eval(result.stdout)['roleList']
+                    roleNameList = map(lambda x: x['roleName'], roleList)
+                    
+                    for roleName in roleNameList:
+                        print(f"Processing account ID: {accountId}, role: {roleName}")
+                        construct_role_profile_section(
+                            os.path.expanduser(aws_config), f'profile {accountId}',
+                            sso_session, accountId, roleName, section_dict["sso_region"]
+                        )
+        
+        except Exception as e:
+            print(f"❌ Failed to process SSO session '{sso_session}': {e}")
                 
     
 

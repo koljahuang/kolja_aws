@@ -1,8 +1,36 @@
 
 # Ignore dynaconf secret files
 .secrets.*
-dist
-__pycache__
-.venv
-.vscode
+
+# Ignore local sensitive configuration files (keep templates with placeholders)
+settings.local.toml
+sso_session.local.template
+
+# Build and cache directories
+dist/
+__pycache__/
+.venv/
+.pytest_cache/
+
+# IDE and OS files
+.vscode/
 .DS_Store
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesis
