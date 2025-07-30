@@ -1,0 +1,4 @@
+[sso_sessions.test]
+sso_start_url = "https://xxx.awsapps.com/start#replace-with-your-sso-url"
+access_token = "xxx-your-access-token"
+secret_key = "xxx-your-secret-key"
