@@ -1,21 +1,28 @@
-[tool.poetry]
-name = "kolja-aws"
-version = "0.1.0"
-description = ""
-authors = ["kolja huang <koljahuang@gmail.com>"]
-readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.11"
-dynaconf = "^3.2.6"
-click = "^8.1.7"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.4.1"
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.poetry]
+name = "kolja-aws"
+version = "0.1.0"
+description = "AWS SSO CLI Tool"
+authors = ["Kolja Huang <kolja@example.com>"]
+readme = "README.md"
+packages = [{include = "kolja_aws"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+click = "^8.0.0"
+dynaconf = "^3.1.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0.0"
+
 [tool.poetry.scripts]
 kolja = "kolja_aws.kolja_login:cli"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
