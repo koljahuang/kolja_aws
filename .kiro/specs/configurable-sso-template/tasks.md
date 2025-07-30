@@ -1,73 +1,73 @@
-# 实施计划
+# Implementation Plan
 
-- [ ] 1. 创建核心数据模型和验证器
-  - 实现SSOSessionConfig数据类，包含配置字段和验证方法
-  - 实现SSOConfigCollection数据类，管理多个SSO会话配置
-  - 创建sso_validator.py模块，实现URL和AWS区域验证函数
-  - 编写数据模型的单元测试
-  - _需求: 1.2, 4.1, 4.2_
+- [ ] 1. Create core data models and validators
+  - Implement SSOSessionConfig data class with configuration fields and validation methods
+  - Implement SSOConfigCollection data class to manage multiple SSO session configurations
+  - Create sso_validator.py module with URL and AWS region validation functions
+  - Write unit tests for data models
+  - _Requirements: 1.2, 4.1, 4.2_
 
-- [ ] 2. 实现SSO配置管理器
-  - 创建sso_config_manager.py模块和SSOConfigManager类
-  - 实现从settings.toml读取sso_sessions配置块的功能
-  - 实现配置验证和错误处理逻辑
-  - 添加配置访问接口方法
-  - 编写配置管理器的单元测试
-  - _需求: 1.1, 1.3, 3.2, 4.3_
+- [ ] 2. Implement SSO configuration manager
+  - Create sso_config_manager.py module and SSOConfigManager class
+  - Implement functionality to read sso_sessions configuration blocks from settings.toml
+  - Implement configuration validation and error handling logic
+  - Add configuration access interface methods
+  - Write unit tests for configuration manager
+  - _Requirements: 1.1, 1.3, 3.2, 4.3_
 
-- [ ] 3. 实现模板生成器
-  - 创建sso_template_generator.py模块和SSOTemplateGenerator类
-  - 实现单个SSO会话配置块的生成方法
-  - 实现完整模板内容的生成方法
-  - 确保生成的模板格式与原有模板一致
-  - 编写模板生成器的单元测试
-  - _需求: 2.1, 2.2, 2.3, 2.4_
+- [ ] 3. Implement template generator
+  - Create sso_template_generator.py module and SSOTemplateGenerator class
+  - Implement method to generate individual SSO session configuration blocks
+  - Implement method to generate complete template content
+  - Ensure generated template format matches existing template
+  - Write unit tests for template generator
+  - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [x] 4. 创建自定义异常类
-  - 在新模块中定义SSOConfigError及其子类
-  - 实现清晰的错误信息和修复建议
-  - 为每种错误类型添加适当的上下文信息
-  - 编写异常处理的单元测试
-  - _需求: 3.2, 4.3_
+- [x] 4. Create custom exception classes
+  - Define SSOConfigError and its subclasses in new module
+  - Implement clear error messages and repair suggestions
+  - Add appropriate context information for each error type
+  - Write unit tests for exception handling
+  - _Requirements: 3.2, 4.3_
 
-- [ ] 5. 集成配置管理到现有CLI命令
-  - 修改kolja_login.py中的set命令，使用新的配置管理器
-  - 更新set命令逻辑，优先从settings.toml读取配置
-  - 保持向后兼容性，支持回退到原有模板文件
-  - 确保CLI接口保持不变
-  - _需求: 2.1, 2.2, 3.1_
+- [ ] 5. Integrate configuration management into existing CLI commands
+  - Modify set command in kolja_login.py to use new configuration manager
+  - Update set command logic to prioritize reading configuration from settings.toml
+  - Maintain backward compatibility with fallback to original template files
+  - Ensure CLI interface remains unchanged
+  - _Requirements: 2.1, 2.2, 3.1_
 
-- [ ] 6. 更新工具函数以支持动态配置
-  - 修改utils.py中的get_section_metadata_from_template函数
-  - 添加对动态生成模板内容的支持
-  - 确保现有功能不受影响
-  - 更新相关的工具函数以使用新的配置系统
-  - _需求: 3.1, 3.2_
+- [ ] 6. Update utility functions to support dynamic configuration
+  - Modify get_section_metadata_from_template function in utils.py
+  - Add support for dynamically generated template content
+  - Ensure existing functionality is not affected
+  - Update related utility functions to use new configuration system
+  - _Requirements: 3.1, 3.2_
 
-- [ ] 7. 实现配置验证命令
-  - 在CLI中添加新的验证命令
-  - 实现配置完整性和正确性检查
-  - 提供详细的验证报告和修复建议
-  - 编写验证命令的测试
-  - _需求: 4.1, 4.2, 4.3, 4.4_
+- [ ] 7. Implement configuration validation command
+  - Add new validation command to CLI
+  - Implement configuration completeness and correctness checks
+  - Provide detailed validation reports and repair suggestions
+  - Write tests for validation command
+  - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 8. 创建配置迁移工具
-  - 实现从现有模板文件到settings.toml的迁移功能
-  - 添加迁移命令到CLI接口
-  - 确保迁移过程的数据完整性
-  - 提供迁移前后的对比和确认机制
-  - _需求: 1.1, 1.2, 1.3_
+- [ ] 8. Create configuration migration tool
+  - Implement migration functionality from existing template files to settings.toml
+  - Add migration command to CLI interface
+  - Ensure data integrity during migration process
+  - Provide comparison and confirmation mechanism before and after migration
+  - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 9. 编写集成测试
-  - 创建端到端测试，覆盖从配置读取到模板生成的完整流程
-  - 测试CLI命令的集成功能
-  - 测试错误场景和异常处理
-  - 测试向后兼容性和混合模式
-  - _需求: 1.1, 2.1, 3.1, 4.1_
+- [ ] 9. Write integration tests
+  - Create end-to-end tests covering complete flow from configuration reading to template generation
+  - Test CLI command integration functionality
+  - Test error scenarios and exception handling
+  - Test backward compatibility and hybrid mode
+  - _Requirements: 1.1, 2.1, 3.1, 4.1_
 
-- [ ] 10. 更新项目文档和示例
-  - 更新README.md，说明新的配置方式
-  - 创建settings.toml配置示例
-  - 添加迁移指南和最佳实践文档
-  - 更新CLI命令的帮助信息
-  - _需求: 1.1, 1.2, 1.3_
+- [ ] 10. Update project documentation and examples
+  - Update README.md to explain new configuration approach
+  - Create settings.toml configuration examples
+  - Add migration guide and best practices documentation
+  - Update CLI command help information
+  - _Requirements: 1.1, 1.2, 1.3_

@@ -1,42 +1,42 @@
 """
-SSO配置相关的自定义异常类
+Custom exception classes for SSO configuration
 
-该模块定义了SSO配置管理过程中可能出现的各种异常类型，
-每个异常都包含清晰的错误信息和修复建议。
+This module defines various exception types that may occur during SSO configuration management,
+each exception contains clear error messages and repair suggestions.
 """
 
 from typing import List, Optional, Dict, Any
 
 
 class SSOConfigError(Exception):
-    """SSO配置相关错误的基类
+    """Base class for SSO configuration related errors
     
-    所有SSO配置相关的异常都应该继承自这个基类。
-    提供了基本的错误信息和上下文管理功能。
+    All SSO configuration related exceptions should inherit from this base class.
+    Provides basic error information and context management functionality.
     """
     
     def __init__(self, message: str, context: Optional[Dict[str, Any]] = None, 
                  suggestions: Optional[List[str]] = None):
-        """初始化SSO配置错误
+        """Initialize SSO configuration error
         
         Args:
-            message: 错误描述信息
-            context: 错误上下文信息，包含相关的配置数据
-            suggestions: 修复建议列表
+            message: Error description message
+            context: Error context information, containing related configuration data
+            suggestions: List of repair suggestions
         """
         super().__init__(message)
         self.context = context or {}
         self.suggestions = suggestions or []
     
     def __str__(self) -> str:
-        """返回格式化的错误信息"""
+        """Return formatted error message"""
         error_msg = super().__str__()
         
         if self.context:
-            error_msg += f"\n上下文信息: {self.context}"
+            error_msg += f"\nContext information: {self.context}"
         
         if self.suggestions:
-            error_msg += "\n修复建议:"
+            error_msg += "\nRepair suggestions:"
             for i, suggestion in enumerate(self.suggestions, 1):
                 error_msg += f"\n  {i}. {suggestion}"
         
@@ -44,24 +44,24 @@ class SSOConfigError(Exception):
 
 
 class InvalidSSOConfigError(SSOConfigError):
-    """无效的SSO配置错误
+    """Invalid SSO configuration error
     
-    当SSO配置格式不正确或包含无效值时抛出此异常。
+    This exception is thrown when SSO configuration format is incorrect or contains invalid values.
     """
     
     def __init__(self, session_name: str, field_name: str, field_value: Any, 
                  expected_format: str, context: Optional[Dict[str, Any]] = None):
-        """初始化无效配置错误
+        """Initialize invalid configuration error
         
         Args:
-            session_name: SSO会话名称
-            field_name: 无效的字段名
-            field_value: 无效的字段值
-            expected_format: 期望的格式描述
-            context: 额外的上下文信息
+            session_name: SSO session name
+            field_name: Invalid field name
+            field_value: Invalid field value
+            expected_format: Expected format description
+            context: Additional context information
         """
-        message = (f"SSO会话 '{session_name}' 中的字段 '{field_name}' "
-                  f"值 '{field_value}' 无效")
+        message = (f"Field '{field_name}' in SSO session '{session_name}' "
+                  f"has invalid value '{field_value}'")
         
         error_context = {
             "session_name": session_name,
@@ -73,39 +73,39 @@ class InvalidSSOConfigError(SSOConfigError):
             error_context.update(context)
         
         suggestions = [
-            f"确保 '{field_name}' 字段的格式符合: {expected_format}",
-            f"检查 settings.toml 中 [sso_sessions.{session_name}] 部分的配置",
-            "参考文档中的配置示例进行修正"
+            f"Ensure '{field_name}' field format conforms to: {expected_format}",
+            f"Check configuration in [sso_sessions.{session_name}] section of settings.toml",
+            "Refer to configuration examples in documentation for correction"
         ]
         
         super().__init__(message, error_context, suggestions)
 
 
 class MissingSSOConfigError(SSOConfigError):
-    """缺失的SSO配置错误
+    """Missing SSO configuration error
     
-    当必需的SSO配置字段或会话不存在时抛出此异常。
+    This exception is thrown when required SSO configuration fields or sessions do not exist.
     """
     
     def __init__(self, missing_item: str, item_type: str = "field", 
                  session_name: Optional[str] = None, 
                  context: Optional[Dict[str, Any]] = None):
-        """初始化缺失配置错误
+        """Initialize missing configuration error
         
         Args:
-            missing_item: 缺失的项目名称
-            item_type: 缺失项目的类型 ("field", "session", "section")
-            session_name: 相关的SSO会话名称（如果适用）
-            context: 额外的上下文信息
+            missing_item: Name of missing item
+            item_type: Type of missing item ("field", "session", "section")
+            session_name: Related SSO session name (if applicable)
+            context: Additional context information
         """
         if item_type == "field" and session_name:
-            message = f"SSO会话 '{session_name}' 缺少必需的字段 '{missing_item}'"
+            message = f"SSO session '{session_name}' is missing required field '{missing_item}'"
         elif item_type == "session":
-            message = f"未找到SSO会话配置 '{missing_item}'"
+            message = f"SSO session configuration '{missing_item}' not found"
         elif item_type == "section":
-            message = f"settings.toml 中缺少 '{missing_item}' 配置部分"
+            message = f"Missing '{missing_item}' configuration section in settings.toml"
         else:
-            message = f"缺少必需的SSO配置项 '{missing_item}'"
+            message = f"Missing required SSO configuration item '{missing_item}'"
         
         error_context = {
             "missing_item": missing_item,
@@ -118,44 +118,44 @@ class MissingSSOConfigError(SSOConfigError):
         suggestions = []
         if item_type == "field":
             suggestions.extend([
-                f"在 settings.toml 的 [sso_sessions.{session_name}] 部分添加 '{missing_item}' 字段",
-                "确保所有必需字段都已配置: sso_start_url, sso_region"
+                f"Add '{missing_item}' field in [sso_sessions.{session_name}] section of settings.toml",
+                "Ensure all required fields are configured: sso_start_url, sso_region"
             ])
         elif item_type == "session":
             suggestions.extend([
-                f"在 settings.toml 中添加 [sso_sessions.{missing_item}] 配置部分",
-                "检查会话名称是否拼写正确"
+                f"Add [sso_sessions.{missing_item}] configuration section in settings.toml",
+                "Check if session name is spelled correctly"
             ])
         elif item_type == "section":
             suggestions.extend([
-                "在 settings.toml 中添加 [sso_sessions] 配置部分",
-                "确保配置文件格式正确"
+                "Add [sso_sessions] configuration section in settings.toml",
+                "Ensure configuration file format is correct"
             ])
         
-        suggestions.append("参考文档中的完整配置示例")
+        suggestions.append("Refer to complete configuration examples in documentation")
         
         super().__init__(message, error_context, suggestions)
 
 
 class InvalidURLError(SSOConfigError):
-    """无效的URL格式错误
+    """Invalid URL format error
     
-    当SSO起始URL格式不正确时抛出此异常。
+    This exception is thrown when SSO start URL format is incorrect.
     """
     
     def __init__(self, url: str, session_name: Optional[str] = None, 
                  context: Optional[Dict[str, Any]] = None):
-        """初始化无效URL错误
+        """Initialize invalid URL error
         
         Args:
-            url: 无效的URL
-            session_name: 相关的SSO会话名称
-            context: 额外的上下文信息
+            url: Invalid URL
+            session_name: Related SSO session name
+            context: Additional context information
         """
         if session_name:
-            message = f"SSO会话 '{session_name}' 的起始URL '{url}' 格式无效"
+            message = f"Start URL '{url}' for SSO session '{session_name}' has invalid format"
         else:
-            message = f"URL '{url}' 格式无效"
+            message = f"URL '{url}' has invalid format"
         
         error_context = {
             "invalid_url": url,
@@ -165,34 +165,34 @@ class InvalidURLError(SSOConfigError):
             error_context.update(context)
         
         suggestions = [
-            "确保URL以 'https://' 开头",
-            "检查URL是否包含有效的域名",
-            "确保URL格式符合标准格式，例如: https://start.home.awsapps.cn/directory/xxx",
-            "验证URL是否可以在浏览器中正常访问"
+            "Ensure URL starts with 'https://'",
+            "Check if URL contains a valid domain name",
+            "Ensure URL format conforms to standard format, e.g.: https://start.home.awsapps.cn/directory/xxx",
+            "Verify if URL can be accessed normally in browser"
         ]
         
         super().__init__(message, error_context, suggestions)
 
 
 class InvalidRegionError(SSOConfigError):
-    """无效的AWS区域错误
+    """Invalid AWS region error
     
-    当AWS区域格式不正确时抛出此异常。
+    This exception is thrown when AWS region format is incorrect.
     """
     
     def __init__(self, region: str, session_name: Optional[str] = None, 
                  context: Optional[Dict[str, Any]] = None):
-        """初始化无效区域错误
+        """Initialize invalid region error
         
         Args:
-            region: 无效的AWS区域
-            session_name: 相关的SSO会话名称
-            context: 额外的上下文信息
+            region: Invalid AWS region
+            session_name: Related SSO session name
+            context: Additional context information
         """
         if session_name:
-            message = f"SSO会话 '{session_name}' 的AWS区域 '{region}' 格式无效"
+            message = f"AWS region '{region}' for SSO session '{session_name}' has invalid format"
         else:
-            message = f"AWS区域 '{region}' 格式无效"
+            message = f"AWS region '{region}' has invalid format"
         
         error_context = {
             "invalid_region": region,
@@ -202,32 +202,32 @@ class InvalidRegionError(SSOConfigError):
             error_context.update(context)
         
         suggestions = [
-            "使用有效的AWS区域代码，例如: us-east-1, ap-southeast-2, cn-northwest-1",
-            "检查区域代码的拼写是否正确",
-            "确保区域代码符合AWS标准格式: <region>-<availability-zone>-<number>",
-            "参考AWS官方文档获取完整的区域列表"
+            "Use valid AWS region codes, e.g.: us-east-1, ap-southeast-2, cn-northwest-1",
+            "Check if region code spelling is correct",
+            "Ensure region code conforms to AWS standard format: <region>-<availability-zone>-<number>",
+            "Refer to AWS official documentation for complete region list"
         ]
         
         super().__init__(message, error_context, suggestions)
 
 
 class SSOConfigFileError(SSOConfigError):
-    """SSO配置文件相关错误
+    """SSO configuration file related error
     
-    当配置文件读取、解析或写入出现问题时抛出此异常。
+    This exception is thrown when configuration file reading, parsing or writing encounters problems.
     """
     
     def __init__(self, file_path: str, operation: str, original_error: Optional[Exception] = None,
                  context: Optional[Dict[str, Any]] = None):
-        """初始化配置文件错误
+        """Initialize configuration file error
         
         Args:
-            file_path: 相关的文件路径
-            operation: 执行的操作 ("read", "write", "parse")
-            original_error: 原始异常对象
-            context: 额外的上下文信息
+            file_path: Related file path
+            operation: Operation being performed ("read", "write", "parse")
+            original_error: Original exception object
+            context: Additional context information
         """
-        message = f"配置文件 '{file_path}' {operation}操作失败"
+        message = f"Configuration file '{file_path}' {operation} operation failed"
         if original_error:
             message += f": {str(original_error)}"
         
@@ -242,44 +242,44 @@ class SSOConfigFileError(SSOConfigError):
         suggestions = []
         if operation == "read":
             suggestions.extend([
-                "检查文件是否存在",
-                "确保有足够的文件读取权限",
-                "验证文件路径是否正确"
+                "Check if file exists",
+                "Ensure sufficient file read permissions",
+                "Verify if file path is correct"
             ])
         elif operation == "write":
             suggestions.extend([
-                "检查目录是否存在",
-                "确保有足够的文件写入权限",
-                "检查磁盘空间是否充足"
+                "Check if directory exists",
+                "Ensure sufficient file write permissions",
+                "Check if disk space is sufficient"
             ])
         elif operation == "parse":
             suggestions.extend([
-                "检查TOML文件格式是否正确",
-                "确保配置文件语法符合TOML标准",
-                "使用TOML验证工具检查文件格式"
+                "Check if TOML file format is correct",
+                "Ensure configuration file syntax conforms to TOML standard",
+                "Use TOML validation tools to check file format"
             ])
         
-        suggestions.append("查看详细错误信息以获取更多诊断信息")
+        suggestions.append("View detailed error information for more diagnostic information")
         
         super().__init__(message, error_context, suggestions)
 
 
 class SSOTemplateGenerationError(SSOConfigError):
-    """SSO模板生成错误
+    """SSO template generation error
     
-    当模板生成过程中出现问题时抛出此异常。
+    This exception is thrown when problems occur during template generation process.
     """
     
     def __init__(self, template_type: str, reason: str, 
                  context: Optional[Dict[str, Any]] = None):
-        """初始化模板生成错误
+        """Initialize template generation error
         
         Args:
-            template_type: 模板类型 ("session_block", "full_template")
-            reason: 失败原因
-            context: 额外的上下文信息
+            template_type: Template type ("session_block", "full_template")
+            reason: Failure reason
+            context: Additional context information
         """
-        message = f"{template_type}模板生成失败: {reason}"
+        message = f"{template_type} template generation failed: {reason}"
         
         error_context = {
             "template_type": template_type,
@@ -289,10 +289,10 @@ class SSOTemplateGenerationError(SSOConfigError):
             error_context.update(context)
         
         suggestions = [
-            "检查SSO配置是否完整和有效",
-            "确保所有必需的配置字段都已提供",
-            "验证配置数据的格式是否正确",
-            "查看详细错误信息以确定具体问题"
+            "Check if SSO configuration is complete and valid",
+            "Ensure all required configuration fields are provided",
+            "Verify if configuration data format is correct",
+            "View detailed error information to determine specific issues"
         ]
         
         super().__init__(message, error_context, suggestions)

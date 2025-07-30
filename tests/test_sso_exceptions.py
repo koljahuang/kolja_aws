@@ -1,8 +1,8 @@
 """
-SSO异常类的单元测试
+Unit tests for SSO exception classes
 
-测试所有自定义异常类的功能，包括错误信息格式化、
-上下文信息管理和修复建议提供。
+Test all custom exception class functionality, including error message formatting,
+context information management, and repair suggestion provision.
 """
 
 import pytest
@@ -18,57 +18,57 @@ from kolja_aws.sso_exceptions import (
 
 
 class TestSSOConfigError:
-    """测试基础异常类SSOConfigError"""
+    """Test base exception class SSOConfigError"""
     
     def test_basic_error_creation(self):
-        """测试基本错误创建"""
-        error = SSOConfigError("测试错误消息")
-        assert str(error) == "测试错误消息"
+        """Test basic error creation"""
+        error = SSOConfigError("Test error message")
+        assert str(error) == "Test error message"
         assert error.context == {}
         assert error.suggestions == []
     
     def test_error_with_context(self):
-        """测试带上下文信息的错误"""
+        """Test error with context information"""
         context = {"key": "value", "number": 42}
-        error = SSOConfigError("测试错误", context=context)
+        error = SSOConfigError("Test error", context=context)
         
         error_str = str(error)
-        assert "测试错误" in error_str
-        assert "上下文信息" in error_str
+        assert "Test error" in error_str
+        assert "Context information" in error_str
         assert "key" in error_str
         assert "value" in error_str
     
     def test_error_with_suggestions(self):
-        """测试带修复建议的错误"""
-        suggestions = ["建议1", "建议2", "建议3"]
-        error = SSOConfigError("测试错误", suggestions=suggestions)
+        """Test error with repair suggestions"""
+        suggestions = ["Suggestion 1", "Suggestion 2", "Suggestion 3"]
+        error = SSOConfigError("Test error", suggestions=suggestions)
         
         error_str = str(error)
-        assert "测试错误" in error_str
-        assert "修复建议" in error_str
-        assert "1. 建议1" in error_str
-        assert "2. 建议2" in error_str
-        assert "3. 建议3" in error_str
+        assert "Test error" in error_str
+        assert "Repair suggestions" in error_str
+        assert "1. Suggestion 1" in error_str
+        assert "2. Suggestion 2" in error_str
+        assert "3. Suggestion 3" in error_str
     
     def test_error_with_context_and_suggestions(self):
-        """测试同时包含上下文和建议的错误"""
+        """Test error with both context and suggestions"""
         context = {"session": "test-session"}
-        suggestions = ["检查配置", "重新尝试"]
-        error = SSOConfigError("完整错误", context=context, suggestions=suggestions)
+        suggestions = ["Check configuration", "Retry"]
+        error = SSOConfigError("Complete error", context=context, suggestions=suggestions)
         
         error_str = str(error)
-        assert "完整错误" in error_str
-        assert "上下文信息" in error_str
-        assert "修复建议" in error_str
+        assert "Complete error" in error_str
+        assert "Context information" in error_str
+        assert "Repair suggestions" in error_str
         assert "session" in error_str
-        assert "检查配置" in error_str
+        assert "Check configuration" in error_str
 
 
 class TestInvalidSSOConfigError:
-    """测试无效SSO配置错误"""
+    """Test invalid SSO configuration error"""
     
     def test_invalid_config_error_creation(self):
-        """测试无效配置错误创建"""
+        """Test invalid configuration error creation"""
         error = InvalidSSOConfigError(
             session_name="test-session",
             field_name="sso_start_url",
@@ -80,20 +80,20 @@ class TestInvalidSSOConfigError:
         assert "test-session" in error_str
         assert "sso_start_url" in error_str
         assert "invalid-url" in error_str
-        assert "无效" in error_str
+        assert "invalid" in error_str
         
-        # 检查上下文信息
+        # Check context information
         assert error.context["session_name"] == "test-session"
         assert error.context["field_name"] == "sso_start_url"
         assert error.context["field_value"] == "invalid-url"
         assert error.context["expected_format"] == "https://..."
         
-        # 检查修复建议
+        # Check repair suggestions
         assert len(error.suggestions) > 0
-        assert any("格式符合" in suggestion for suggestion in error.suggestions)
+        assert any("format conforms" in suggestion for suggestion in error.suggestions)
     
     def test_invalid_config_error_with_additional_context(self):
-        """测试带额外上下文的无效配置错误"""
+        """Test invalid configuration error with additional context"""
         additional_context = {"config_file": "settings.toml"}
         error = InvalidSSOConfigError(
             session_name="prod",
@@ -108,10 +108,10 @@ class TestInvalidSSOConfigError:
 
 
 class TestMissingSSOConfigError:
-    """测试缺失SSO配置错误"""
+    """Test missing SSO configuration error"""
     
     def test_missing_field_error(self):
-        """测试缺失字段错误"""
+        """Test missing field error"""
         error = MissingSSOConfigError(
             missing_item="sso_start_url",
             item_type="field",
@@ -121,14 +121,14 @@ class TestMissingSSOConfigError:
         error_str = str(error)
         assert "test-session" in error_str
         assert "sso_start_url" in error_str
-        assert "缺少必需的字段" in error_str
+        assert "missing required field" in error_str
         
-        # 检查修复建议包含字段添加指导
-        assert any("添加" in suggestion and "sso_start_url" in suggestion 
+        # Check repair suggestions contain field addition guidance
+        assert any("Add" in suggestion and "sso_start_url" in suggestion 
                   for suggestion in error.suggestions)
     
     def test_missing_session_error(self):
-        """测试缺失会话错误"""
+        """Test missing session error"""
         error = MissingSSOConfigError(
             missing_item="prod-session",
             item_type="session"
@@ -136,14 +136,14 @@ class TestMissingSSOConfigError:
         
         error_str = str(error)
         assert "prod-session" in error_str
-        assert "未找到SSO会话配置" in error_str
+        assert "SSO session configuration" in error_str and "not found" in error_str
         
-        # 检查修复建议包含会话添加指导
-        assert any("添加" in suggestion and "sso_sessions.prod-session" in suggestion 
+        # Check repair suggestions contain session addition guidance
+        assert any("Add" in suggestion and "sso_sessions.prod-session" in suggestion 
                   for suggestion in error.suggestions)
     
     def test_missing_section_error(self):
-        """测试缺失配置部分错误"""
+        """Test missing configuration section error"""
         error = MissingSSOConfigError(
             missing_item="sso_sessions",
             item_type="section"
@@ -151,13 +151,13 @@ class TestMissingSSOConfigError:
         
         error_str = str(error)
         assert "sso_sessions" in error_str
-        assert "缺少" in error_str and "配置部分" in error_str
+        assert "Missing" in error_str and "configuration section" in error_str
         
-        # 检查修复建议包含部分添加指导
+        # Check repair suggestions contain section addition guidance
         assert any("[sso_sessions]" in suggestion for suggestion in error.suggestions)
     
     def test_missing_config_with_context(self):
-        """测试带上下文的缺失配置错误"""
+        """Test missing configuration error with context"""
         context = {"config_path": "/path/to/settings.toml"}
         error = MissingSSOConfigError(
             missing_item="sso_region",
@@ -171,34 +171,34 @@ class TestMissingSSOConfigError:
 
 
 class TestInvalidURLError:
-    """测试无效URL错误"""
+    """Test invalid URL error"""
     
     def test_invalid_url_error_basic(self):
-        """测试基本无效URL错误"""
+        """Test basic invalid URL error"""
         error = InvalidURLError("not-a-url")
         
         error_str = str(error)
         assert "not-a-url" in error_str
-        assert "格式无效" in error_str
+        assert "invalid format" in error_str
         
-        # 检查修复建议包含URL格式指导
+        # Check repair suggestions contain URL format guidance
         assert any("https://" in suggestion for suggestion in error.suggestions)
-        assert any("域名" in suggestion for suggestion in error.suggestions)
+        assert any("domain name" in suggestion for suggestion in error.suggestions)
     
     def test_invalid_url_error_with_session(self):
-        """测试带会话名的无效URL错误"""
+        """Test invalid URL error with session name"""
         error = InvalidURLError("invalid-url", session_name="test-session")
         
         error_str = str(error)
         assert "test-session" in error_str
         assert "invalid-url" in error_str
-        assert "起始URL" in error_str
+        assert "Start URL" in error_str
         
         assert error.context["invalid_url"] == "invalid-url"
         assert error.context["session_name"] == "test-session"
     
     def test_invalid_url_error_with_context(self):
-        """测试带额外上下文的无效URL错误"""
+        """Test invalid URL error with additional context"""
         context = {"validation_step": "initial_check"}
         error = InvalidURLError("bad-url", context=context)
         
@@ -207,49 +207,49 @@ class TestInvalidURLError:
 
 
 class TestInvalidRegionError:
-    """测试无效AWS区域错误"""
+    """Test invalid AWS region error"""
     
     def test_invalid_region_error_basic(self):
-        """测试基本无效区域错误"""
+        """Test basic invalid region error"""
         error = InvalidRegionError("invalid-region")
         
         error_str = str(error)
         assert "invalid-region" in error_str
-        assert "格式无效" in error_str
+        assert "invalid format" in error_str
         
-        # 检查修复建议包含区域格式指导
+        # Check repair suggestions contain region format guidance
         assert any("us-east-1" in suggestion for suggestion in error.suggestions)
-        assert any("AWS区域代码" in suggestion for suggestion in error.suggestions)
+        assert any("AWS region codes" in suggestion for suggestion in error.suggestions)
     
     def test_invalid_region_error_with_session(self):
-        """测试带会话名的无效区域错误"""
+        """Test invalid region error with session name"""
         error = InvalidRegionError("bad-region", session_name="prod")
         
         error_str = str(error)
         assert "prod" in error_str
         assert "bad-region" in error_str
-        assert "AWS区域" in error_str
+        assert "AWS region" in error_str
         
         assert error.context["invalid_region"] == "bad-region"
         assert error.context["session_name"] == "prod"
     
     def test_invalid_region_error_suggestions(self):
-        """测试无效区域错误的修复建议"""
+        """Test invalid region error repair suggestions"""
         error = InvalidRegionError("wrong")
         
         suggestions_text = " ".join(error.suggestions)
         assert "ap-southeast-2" in suggestions_text
         assert "cn-northwest-1" in suggestions_text
-        assert "拼写" in suggestions_text
-        assert "AWS标准格式" in suggestions_text
+        assert "spelling" in suggestions_text
+        assert "AWS standard format" in suggestions_text
 
 
 class TestSSOConfigFileError:
-    """测试SSO配置文件错误"""
+    """Test SSO configuration file error"""
     
     def test_file_read_error(self):
-        """测试文件读取错误"""
-        original_error = FileNotFoundError("文件不存在")
+        """Test file read error"""
+        original_error = FileNotFoundError("File not found")
         error = SSOConfigFileError(
             file_path="/path/to/settings.toml",
             operation="read",
@@ -258,30 +258,30 @@ class TestSSOConfigFileError:
         
         error_str = str(error)
         assert "/path/to/settings.toml" in error_str
-        assert "read操作失败" in error_str
-        assert "文件不存在" in error_str
+        assert "read operation failed" in error_str
+        assert "File not found" in error_str
         
-        # 检查读取操作的修复建议
-        assert any("文件是否存在" in suggestion for suggestion in error.suggestions)
-        assert any("读取权限" in suggestion for suggestion in error.suggestions)
+        # Check read operation repair suggestions
+        assert any("file exists" in suggestion for suggestion in error.suggestions)
+        assert any("read permissions" in suggestion for suggestion in error.suggestions)
     
     def test_file_write_error(self):
-        """测试文件写入错误"""
+        """Test file write error"""
         error = SSOConfigFileError(
             file_path="/readonly/settings.toml",
             operation="write"
         )
         
         error_str = str(error)
-        assert "write操作失败" in error_str
+        assert "write operation failed" in error_str
         
-        # 检查写入操作的修复建议
-        assert any("写入权限" in suggestion for suggestion in error.suggestions)
-        assert any("磁盘空间" in suggestion for suggestion in error.suggestions)
+        # Check write operation repair suggestions
+        assert any("write permissions" in suggestion for suggestion in error.suggestions)
+        assert any("disk space" in suggestion for suggestion in error.suggestions)
     
     def test_file_parse_error(self):
-        """测试文件解析错误"""
-        parse_error = ValueError("TOML格式错误")
+        """Test file parse error"""
+        parse_error = ValueError("TOML format error")
         error = SSOConfigFileError(
             file_path="settings.toml",
             operation="parse",
@@ -289,15 +289,15 @@ class TestSSOConfigFileError:
         )
         
         error_str = str(error)
-        assert "parse操作失败" in error_str
-        assert "TOML格式错误" in error_str
+        assert "parse operation failed" in error_str
+        assert "TOML format error" in error_str
         
-        # 检查解析操作的修复建议
-        assert any("TOML文件格式" in suggestion for suggestion in error.suggestions)
-        assert any("TOML标准" in suggestion for suggestion in error.suggestions)
+        # Check parse operation repair suggestions
+        assert any("TOML file format" in suggestion for suggestion in error.suggestions)
+        assert any("TOML standard" in suggestion for suggestion in error.suggestions)
     
     def test_file_error_with_context(self):
-        """测试带上下文的文件错误"""
+        """Test file error with context"""
         context = {"line_number": 15, "column": 8}
         error = SSOConfigFileError(
             file_path="config.toml",
@@ -311,46 +311,46 @@ class TestSSOConfigFileError:
 
 
 class TestSSOTemplateGenerationError:
-    """测试SSO模板生成错误"""
+    """Test SSO template generation error"""
     
     def test_session_block_generation_error(self):
-        """测试会话块生成错误"""
+        """Test session block generation error"""
         error = SSOTemplateGenerationError(
             template_type="session_block",
-            reason="缺少必需的配置字段"
+            reason="Missing required configuration fields"
         )
         
         error_str = str(error)
-        assert "session_block模板生成失败" in error_str
-        assert "缺少必需的配置字段" in error_str
+        assert "session_block template generation failed" in error_str
+        assert "Missing required configuration fields" in error_str
         
-        # 检查模板生成的修复建议
-        assert any("SSO配置是否完整" in suggestion for suggestion in error.suggestions)
-        assert any("必需的配置字段" in suggestion for suggestion in error.suggestions)
+        # Check template generation repair suggestions
+        assert any("SSO configuration is complete" in suggestion for suggestion in error.suggestions)
+        assert any("required configuration fields" in suggestion for suggestion in error.suggestions)
     
     def test_full_template_generation_error(self):
-        """测试完整模板生成错误"""
+        """Test full template generation error"""
         error = SSOTemplateGenerationError(
             template_type="full_template",
-            reason="配置数据格式不正确"
+            reason="Configuration data format is incorrect"
         )
         
         error_str = str(error)
-        assert "full_template模板生成失败" in error_str
-        assert "配置数据格式不正确" in error_str
+        assert "full_template template generation failed" in error_str
+        assert "Configuration data format is incorrect" in error_str
         
         assert error.context["template_type"] == "full_template"
-        assert error.context["failure_reason"] == "配置数据格式不正确"
+        assert error.context["failure_reason"] == "Configuration data format is incorrect"
     
     def test_template_generation_error_with_context(self):
-        """测试带上下文的模板生成错误"""
+        """Test template generation error with context"""
         context = {
             "session_name": "prod",
             "missing_fields": ["sso_start_url", "sso_region"]
         }
         error = SSOTemplateGenerationError(
             template_type="session_block",
-            reason="字段验证失败",
+            reason="Field validation failed",
             context=context
         )
         
@@ -360,10 +360,10 @@ class TestSSOTemplateGenerationError:
 
 
 class TestExceptionInheritance:
-    """测试异常继承关系"""
+    """Test exception inheritance relationships"""
     
     def test_all_exceptions_inherit_from_base(self):
-        """测试所有异常都继承自基类"""
+        """Test all exceptions inherit from base class"""
         exceptions = [
             InvalidSSOConfigError("test", "field", "value", "format"),
             MissingSSOConfigError("item", "field"),
@@ -378,7 +378,7 @@ class TestExceptionInheritance:
             assert isinstance(exception, Exception)
     
     def test_exception_context_and_suggestions_available(self):
-        """测试所有异常都有上下文和建议属性"""
+        """Test all exceptions have context and suggestion attributes"""
         exceptions = [
             InvalidSSOConfigError("test", "field", "value", "format"),
             MissingSSOConfigError("item", "field"),
@@ -393,7 +393,7 @@ class TestExceptionInheritance:
             assert hasattr(exception, 'suggestions')
             assert isinstance(exception.context, dict)
             assert isinstance(exception.suggestions, list)
-            assert len(exception.suggestions) > 0  # 所有异常都应该有建议
+            assert len(exception.suggestions) > 0  # All exceptions should have suggestions
 
 
 if __name__ == "__main__":

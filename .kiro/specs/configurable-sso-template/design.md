@@ -1,32 +1,32 @@
-# 设计文档
+# Design Document
 
-## 概述
+## Overview
 
-本设计旨在重构当前硬编码在`sso_session.template`文件中的SSO配置管理方式，将配置信息迁移到`settings.toml`文件中，并实现动态模板生成功能。这将提高系统的可配置性和可维护性，使用户能够通过修改配置文件来管理不同的SSO环境。
+This design aims to refactor the current SSO configuration management approach that is hardcoded in the `sso_session.template` file, migrating configuration information to the `settings.toml` file and implementing dynamic template generation functionality. This will improve system configurability and maintainability, allowing users to manage different SSO environments by modifying configuration files.
 
-## 架构
+## Architecture
 
-### 当前架构问题
-- SSO配置硬编码在模板文件中
-- 需要手动维护多个环境的配置
-- 配置变更需要修改代码文件
+### Current Architecture Issues
+- SSO configuration is hardcoded in template files
+- Manual maintenance required for multiple environment configurations
+- Configuration changes require modifying code files
 
-### 新架构设计
+### New Architecture Design
 ```
-settings.toml (配置源) 
+settings.toml (Configuration Source) 
     ↓
-SSO配置管理器 (读取和验证)
+SSO Configuration Manager (Read and Validate)
     ↓  
-模板生成器 (动态生成)
+Template Generator (Dynamic Generation)
     ↓
-AWS配置文件 (最终输出)
+AWS Configuration File (Final Output)
 ```
 
-## 组件和接口
+## Components and Interfaces
 
-### 1. 配置结构设计
+### 1. Configuration Structure Design
 
-在`settings.toml`中新增SSO配置块：
+Add SSO configuration blocks in `settings.toml`:
 
 ```toml
 [sso_sessions.kolja-cn]
@@ -40,9 +40,9 @@ sso_region = "ap-southeast-2"
 sso_registration_scopes = "sso:account:access"
 ```
 
-### 2. SSO配置管理器 (`sso_config_manager.py`)
+### 2. SSO Configuration Manager (`sso_config_manager.py`)
 
-**核心类：`SSOConfigManager`**
+**Core Class: `SSOConfigManager`**
 
 ```python
 class SSOConfigManager:
@@ -52,14 +52,14 @@ class SSOConfigManager:
     def get_session_config(session_name: str) -> Dict[str, str]
 ```
 
-**职责：**
-- 从settings.toml读取SSO配置
-- 验证配置的完整性和正确性
-- 提供配置访问接口
+**Responsibilities:**
+- Read SSO configuration from settings.toml
+- Validate configuration completeness and correctness
+- Provide configuration access interface
 
-### 3. 模板生成器 (`sso_template_generator.py`)
+### 3. Template Generator (`sso_template_generator.py`)
 
-**核心类：`SSOTemplateGenerator`**
+**Core Class: `SSOTemplateGenerator`**
 
 ```python
 class SSOTemplateGenerator:
@@ -69,26 +69,26 @@ class SSOTemplateGenerator:
     def write_template_to_file(file_path: str) -> None
 ```
 
-**职责：**
-- 基于配置生成SSO会话模板内容
-- 维护模板格式的一致性
-- 支持写入到文件或返回字符串
+**Responsibilities:**
+- Generate SSO session template content based on configuration
+- Maintain template format consistency
+- Support writing to file or returning string
 
-### 4. 配置验证器 (`sso_validator.py`)
+### 4. Configuration Validator (`sso_validator.py`)
 
-**核心函数：**
+**Core Functions:**
 ```python
 def validate_url(url: str) -> bool
 def validate_aws_region(region: str) -> bool
 def validate_sso_session_config(config: Dict) -> Tuple[bool, List[str]]
 ```
 
-**职责：**
-- URL格式验证
-- AWS区域格式验证
-- 配置完整性检查
+**Responsibilities:**
+- URL format validation
+- AWS region format validation
+- Configuration completeness checking
 
-## 数据模型
+## Data Models
 
 ### SSOSessionConfig
 ```python
@@ -114,84 +114,84 @@ class SSOConfigCollection:
     def generate_template(self) -> str
 ```
 
-## 错误处理
+## Error Handling
 
-### 异常类型定义
+### Exception Type Definitions
 ```python
 class SSOConfigError(Exception):
-    """SSO配置相关错误的基类"""
+    """Base class for SSO configuration related errors"""
     pass
 
 class InvalidSSOConfigError(SSOConfigError):
-    """无效的SSO配置错误"""
+    """Invalid SSO configuration error"""
     pass
 
 class MissingSSOConfigError(SSOConfigError):
-    """缺失的SSO配置错误"""
+    """Missing SSO configuration error"""
     pass
 
 class InvalidURLError(SSOConfigError):
-    """无效的URL格式错误"""
+    """Invalid URL format error"""
     pass
 
 class InvalidRegionError(SSOConfigError):
-    """无效的AWS区域错误"""
+    """Invalid AWS region error"""
     pass
 ```
 
-### 错误处理策略
-1. **配置读取错误**：提供清晰的错误信息和修复建议
-2. **验证错误**：详细说明哪个字段有问题以及期望的格式
-3. **文件操作错误**：处理文件权限和路径问题
-4. **向后兼容**：如果配置不存在，回退到原有的模板文件方式
+### Error Handling Strategy
+1. **Configuration Read Errors**: Provide clear error messages and repair suggestions
+2. **Validation Errors**: Detail which field has issues and expected format
+3. **File Operation Errors**: Handle file permission and path issues
+4. **Backward Compatibility**: Fall back to original template file approach if configuration doesn't exist
 
-## 集成方案
+## Integration Plan
 
-### 1. 修改现有代码
-- 更新`kolja_login.py`中的`set`命令，使用新的配置管理器
-- 修改`utils.py`中的`get_section_metadata_from_template`函数，支持动态生成的模板
-- 保持现有CLI接口不变，确保向后兼容
+### 1. Modify Existing Code
+- Update `set` command in `kolja_login.py` to use new configuration manager
+- Modify `get_section_metadata_from_template` function in `utils.py` to support dynamically generated templates
+- Keep existing CLI interface unchanged to ensure backward compatibility
 
-### 2. 配置迁移策略
-- 提供迁移工具，将现有模板文件中的配置转换为settings.toml格式
-- 支持混合模式：优先使用settings.toml，如果不存在则回退到模板文件
-- 添加配置验证命令，帮助用户检查配置正确性
+### 2. Configuration Migration Strategy
+- Provide migration tools to convert existing template file configurations to settings.toml format
+- Support hybrid mode: prioritize settings.toml, fall back to template files if not available
+- Add configuration validation command to help users check configuration correctness
 
-### 3. 渐进式部署
-1. 第一阶段：实现配置读取和验证功能
-2. 第二阶段：实现模板生成功能
-3. 第三阶段：集成到现有CLI命令中
-4. 第四阶段：添加迁移工具和向后兼容支持
+### 3. Progressive Deployment
+1. Phase 1: Implement configuration reading and validation functionality
+2. Phase 2: Implement template generation functionality
+3. Phase 3: Integrate into existing CLI commands
+4. Phase 4: Add migration tools and backward compatibility support
 
-## 测试策略
+## Testing Strategy
 
-### 单元测试
-- **配置管理器测试**：测试配置读取、验证和访问功能
-- **模板生成器测试**：测试模板生成的正确性和格式
-- **验证器测试**：测试各种验证规则和边界情况
-- **数据模型测试**：测试数据类的行为和验证逻辑
+### Unit Tests
+- **Configuration Manager Tests**: Test configuration reading, validation, and access functionality
+- **Template Generator Tests**: Test template generation correctness and format
+- **Validator Tests**: Test various validation rules and edge cases
+- **Data Model Tests**: Test data class behavior and validation logic
 
-### 集成测试
-- **端到端配置流程测试**：从settings.toml读取到生成最终模板
-- **CLI集成测试**：测试修改后的CLI命令功能
-- **文件操作测试**：测试模板文件的读写操作
-- **错误场景测试**：测试各种错误情况的处理
+### Integration Tests
+- **End-to-End Configuration Flow Tests**: From settings.toml reading to final template generation
+- **CLI Integration Tests**: Test modified CLI command functionality
+- **File Operation Tests**: Test template file read/write operations
+- **Error Scenario Tests**: Test handling of various error conditions
 
-### 兼容性测试
-- **向后兼容性测试**：确保现有功能不受影响
-- **配置格式测试**：测试不同配置格式的处理
-- **环境兼容性测试**：测试在不同操作系统和Python版本下的行为
+### Compatibility Tests
+- **Backward Compatibility Tests**: Ensure existing functionality is not affected
+- **Configuration Format Tests**: Test handling of different configuration formats
+- **Environment Compatibility Tests**: Test behavior on different operating systems and Python versions
 
-## 性能考虑
+## Performance Considerations
 
-### 配置缓存
-- 实现配置缓存机制，避免重复读取settings.toml
-- 监控配置文件变化，自动刷新缓存
+### Configuration Caching
+- Implement configuration caching mechanism to avoid repeated settings.toml reads
+- Monitor configuration file changes and automatically refresh cache
 
-### 模板生成优化
-- 延迟生成：只在需要时生成模板内容
-- 模板缓存：缓存生成的模板内容，直到配置变化
+### Template Generation Optimization
+- Lazy generation: Generate template content only when needed
+- Template caching: Cache generated template content until configuration changes
 
-### 内存使用
-- 使用生成器模式处理大量配置
-- 及时释放不需要的配置对象
+### Memory Usage
+- Use generator patterns to handle large amounts of configuration
+- Promptly release unnecessary configuration objects

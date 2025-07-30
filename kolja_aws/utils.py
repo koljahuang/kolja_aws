@@ -55,7 +55,7 @@ def get_latest_tokens_by_region(cache_dir="~/.aws/sso/cache"):
                 region = data.get("region")
 
                 if expires_at and access_token and region:
-                    expires_at_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))  # 转换时间格式
+                    expires_at_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))  # Convert time format
 
                     if region not in region_tokens or expires_at_dt > region_tokens[region]["expiresAt"]:
                         region_tokens[region] = {
