@@ -167,7 +167,7 @@ class InvalidURLError(SSOConfigError):
         suggestions = [
             "Ensure URL starts with 'https://'",
             "Check if URL contains a valid domain name",
-            "Ensure URL format conforms to standard format, e.g.: https://start.home.awsapps.cn/directory/xxx",
+            "Ensure URL format conforms to standard format, e.g.: https://xxx.awsapps.cn/start#replace-with-your-sso-url",
             "Verify if URL can be accessed normally in browser"
         ]
         

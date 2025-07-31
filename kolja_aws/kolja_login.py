@@ -154,8 +154,10 @@ def profiles():
                     
                     for roleName in roleNameList:
                         print(f"Processing account ID: {accountId}, role: {roleName}")
+                        # Use accountId-roleName format for profile section name
+                        profile_name = f"{accountId}-{roleName}"
                         construct_role_profile_section(
-                            os.path.expanduser(aws_config), f'profile {accountId}',
+                            os.path.expanduser(aws_config), f'profile {profile_name}',
                             sso_session, accountId, roleName, section_dict["sso_region"]
                         )
         

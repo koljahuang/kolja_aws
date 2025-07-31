@@ -100,12 +100,19 @@ Automatically create profiles for all accessible accounts and roles:
 kolja aws profiles
 ```
 
-This generates profiles like:
+This generates profiles with the format `[profile AccountID-RoleName]`:
 ```ini
-[profile 123456789012]
+[profile 123456789012-AdminRole]
 sso_session = kolja-cn
 sso_account_id = 123456789012
 sso_role_name = AdminRole
+region = cn-northwest-1
+output = text
+
+[profile 123456789012-ReadOnlyRole]
+sso_session = kolja-cn
+sso_account_id = 123456789012
+sso_role_name = ReadOnlyRole
 region = cn-northwest-1
 output = text
 ```
@@ -130,8 +137,10 @@ assume -c
 
 - **Dynamic Configuration**: SSO settings are managed in `settings.toml`
 - **Template Generation**: Automatically generates SSO session templates
-- **Profile Management**: Creates and updates AWS profiles based on accessible accounts
+- **Profile Management**: Creates and updates AWS profiles with `AccountID-RoleName` format
 - **Fallback Support**: Falls back to template files if dynamic configuration is unavailable
+
+> 📖 **New Feature**: Profiles are now generated with the format `[profile AccountID-RoleName]` for better clarity and organization. See [Profile Naming Format Documentation](docs/profile-naming-format.md) for details.
 
 ## 🧪 Testing
 

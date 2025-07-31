@@ -28,12 +28,12 @@ class TestUtilsDynamicConfig(unittest.TestCase):
         """Setup before tests"""
         self.test_sso_sessions = {
             'kolja-cn': {
-                'sso_start_url': 'https://start.home.awsapps.cn/directory/xxx',
+                'sso_start_url': 'https://xxx.awsapps.cn/start#replace-with-your-sso-url',
                 'sso_region': 'cn-northwest-1',
                 'sso_registration_scopes': 'sso:account:access'
             },
             'kolja': {
-                'sso_start_url': 'https://xxx/start',
+                'sso_start_url': 'https://xxx.awsapps.com/start#replace-with-your-sso-url',
                 'sso_region': 'ap-southeast-2',
                 'sso_registration_scopes': 'sso:account:access'
             }
@@ -51,7 +51,7 @@ class TestUtilsDynamicConfig(unittest.TestCase):
         # Verify template content
         self.assertIn('[sso-session kolja-cn]', template_content)
         self.assertIn('[sso-session kolja]', template_content)
-        self.assertIn('sso_start_url = https://start.home.awsapps.cn/directory/xxx', template_content)
+        self.assertIn('sso_start_url = https://xxx.awsapps.cn/start#replace-with-your-sso-url', template_content)
         self.assertIn('sso_region = cn-northwest-1', template_content)
         self.assertIn('sso_registration_scopes = sso:account:access', template_content)
     
@@ -78,7 +78,7 @@ class TestUtilsDynamicConfig(unittest.TestCase):
         
         # Verify configuration
         expected_config = {
-            'sso_start_url': 'https://start.home.awsapps.cn/directory/xxx',
+            'sso_start_url': 'https://xxx.awsapps.cn/start#replace-with-your-sso-url',
             'sso_region': 'cn-northwest-1',
             'sso_registration_scopes': 'sso:account:access'
         }
@@ -118,7 +118,7 @@ class TestUtilsDynamicConfig(unittest.TestCase):
         
         # Verify results
         self.assertIn('[sso-session kolja-cn]', section_content)
-        self.assertEqual(section_dict['sso_start_url'], 'https://start.home.awsapps.cn/directory/xxx')
+        self.assertEqual(section_dict['sso_start_url'], 'https://xxx.awsapps.cn/start#replace-with-your-sso-url')
         self.assertEqual(section_dict['sso_region'], 'cn-northwest-1')
         self.assertEqual(section_dict['sso_registration_scopes'], 'sso:account:access')
     
@@ -145,7 +145,7 @@ class TestUtilsDynamicConfig(unittest.TestCase):
             
             self.assertIn('[sso-session kolja-cn]', content)
             self.assertIn('[sso-session kolja]', content)
-            self.assertIn('sso_start_url = https://start.home.awsapps.cn/directory/xxx', content)
+            self.assertIn('sso_start_url = https://xxx.awsapps.cn/start#replace-with-your-sso-url', content)
             
         finally:
             # Clean up temporary file

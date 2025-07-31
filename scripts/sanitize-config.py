@@ -60,7 +60,7 @@ def sanitize_sso_template(input_file, output_file):
     # Replace sensitive URLs
     content = re.sub(
         r'sso_start_url = https://[^\s]*',
-        'sso_start_url = https://your-sso-start-url.awsapps.com/start',
+        'sso_start_url = https://xxx.awsapps.com/start#replace-with-your-sso-url',
         content
     )
     

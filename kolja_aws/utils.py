@@ -257,8 +257,10 @@ def construct_role_profile_section(file_path, section,
                                    sso_session, sso_account_id, 
                                    sso_role_name, region):
     remove_block_from_config(file_path, section)
+    # Create profile name with format: accountId-roleName
+    profile_name = f"{sso_account_id}-{sso_role_name}"
     profile_section = f"""
-[profile {sso_account_id}]
+[profile {profile_name}]
 sso_session = {sso_session}
 sso_account_id = {sso_account_id}
 sso_role_name = {sso_role_name}
@@ -268,7 +270,7 @@ output = text
     with open(file_path, 'a') as f:
         f.write(profile_section)
     
-    print(f"Updated section: profile {sso_account_id}")
+    print(f"Updated section: profile {profile_name}")
 
 
 def write_dynamic_sso_template_to_file(output_path=None):

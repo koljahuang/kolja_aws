@@ -30,7 +30,7 @@ Add SSO configuration blocks in `settings.toml`:
 
 ```toml
 [sso_sessions.kolja-cn]
-sso_start_url = "https://start.home.awsapps.cn/directory/xxx"
+sso_start_url = "https://xxx.awsapps.cn/start#replace-with-your-sso-url"
 sso_region = "cn-northwest-1"
 sso_registration_scopes = "sso:account:access"
 
