@@ -11,33 +11,34 @@ A powerful CLI tool that simplifies AWS SSO login management and AWS profile con
 ## 🚀 Installation
 
 ```bash
+uv tool install kolja_aws
+```
+
+Or install from source:
+
+```bash
 git clone https://github.com/koljahuang/kolja_aws.git
 cd kolja_aws
 poetry install
-
-# Setup Git hooks for security (recommended)
-./scripts/setup-git-hooks.sh
 ```
 
 ## ⚙️ Configuration
 
-### Initial Setup
+### Interactive Setup
 
-**Replace placeholder URLs in `settings.toml`:**
-```toml
-AWS_CONFIG="~/.aws/config"
+No configuration files needed! The tool uses interactive prompts to gather all necessary information.
 
-[sso_sessions.kolja-cn]
-sso_start_url = "https://xxx.awsapps.cn/start#replace-with-your-sso-url"  # ← Replace this
-sso_region = "cn-northwest-1"
-sso_registration_scopes = "sso:account:access"
-```
+When you run `kolja aws set <session_name>`, you'll be prompted for:
+- **SSO Start URL**: Your organization's SSO URL (e.g., `https://xxx.awsapps.com/start`)
+- **SSO Region**: AWS region for your SSO (e.g., `ap-southeast-2`, `cn-northwest-1`)
+
+The system automatically sets registration scopes to `sso:account:access`.
 
 ### 🔒 Security Features
 
-- **Smart sensitive data detection**: Prevents committing real SSO URLs while allowing placeholder URLs
-- **Pre-commit hooks**: Automatically scans for and blocks real credentials, tokens, and URLs
-- **Safe configuration**: Use 'xxx' placeholders in committed files, replace locally with real URLs
+- **No configuration files**: Eliminates risk of accidentally committing sensitive SSO URLs
+- **Interactive input only**: All sensitive data entered through secure prompts, never stored in files
+- **No sensitive data in repository**: Since all configuration is interactive, there's no risk of committing sensitive information
 
 ## 📖 Usage
 
@@ -50,40 +51,40 @@ kolja aws --help
 ```
 Usage: kolja aws [OPTIONS] COMMAND [ARGS]...
 
-Development commands.
+AWS SSO session and profile management commands.
+
+Use these commands to interactively configure SSO sessions,
+login to AWS, and generate profiles for your accounts.
 
 Options:
   --help  Show this message and exit.
 
 Commands:
-  get       Get current SSO sessions
-  login     Login to SSO sessions
-  profiles  Generate AWS profiles
-  set       Set SSO session configuration
+  get       List all configured SSO sessions
+  login     Login to all configured SSO sessions
+  profiles  Generate AWS profile sections for all available accounts and roles
+  set       Configure an SSO session through interactive prompts
 ```
 
 ### Step-by-Step Workflow
 
-#### 1. Set SSO Sessions
+#### 1. Configure SSO Sessions
 
-Configure your SSO sessions in the AWS config file:
+Set up your SSO sessions interactively:
 
+```bash
+kolja aws set my-company
+```
+
+You'll be prompted to enter:
+- SSO start URL (e.g., `https://your-company.awsapps.com/start`)
+- SSO region (e.g., `ap-southeast-2`)
+
+The tool will guide you through each step with examples and validation.
+
+Check your configured sessions:
 ```bash
 kolja aws get
-```
-
-This will show available sessions from your `settings.toml`:
-```
-Available SSO sessions:
-  - kolja-cn
-  - kolja
-
-Usage: kolja aws set <session_name> [<session_name2> ...]
-```
-
-Set specific sessions:
-```bash
-kolja aws set kolja-cn kolja
 ```
 
 #### 2. Login to SSO
@@ -135,10 +136,10 @@ assume -c
 
 ## 🏗️ Architecture
 
-- **Dynamic Configuration**: SSO settings are managed in `settings.toml`
-- **Template Generation**: Automatically generates SSO session templates
+- **Interactive Configuration**: No configuration files needed - all settings gathered through interactive prompts
+- **In-Memory Processing**: Configuration data is processed in memory and written directly to AWS config
 - **Profile Management**: Creates and updates AWS profiles with `AccountID-RoleName` format
-- **Fallback Support**: Falls back to template files if dynamic configuration is unavailable
+- **Validation**: Built-in validation for SSO URLs and AWS regions
 
 > 📖 **New Feature**: Profiles are now generated with the format `[profile AccountID-RoleName]` for better clarity and organization. See [Profile Naming Format Documentation](docs/profile-naming-format.md) for details.
 
@@ -152,29 +153,19 @@ pytest
 
 ## 🔐 Security
 
-This project includes several security features to protect sensitive information:
+With the new interactive configuration system, security is greatly simplified:
 
-### Protected Data Patterns
-- Real SSO URLs (e.g., `https://d-xxxxxx.awsapps.com/start`)
-- AWS directory IDs (e.g., `directory/d-xxxxxx`)
-- Access tokens and secret keys
-- Real passwords and credentials
-
-### Security Scripts
-- `scripts/setup-git-hooks.sh` - Sets up Git pre-commit hooks
-- `scripts/sanitize-config.py` - Sanitizes configuration files
-
-### Git Hooks
-The pre-commit hook automatically:
-- Prevents committing sensitive files
-- Scans for sensitive patterns (URLs, tokens, keys)
-- Provides clear error messages when sensitive data is detected
+### Security Benefits
+- **No sensitive data in repository**: All SSO URLs and configuration entered interactively
+- **No configuration files to secure**: Eliminates the risk of accidentally committing sensitive information
+- **Clean git history**: No need for sanitization scripts or git hooks
+- **Simple and secure**: No complex security setup required
 
 ### Best Practices
-1. Keep 'xxx' placeholders in committed files
-2. Replace placeholders locally with your real SSO URLs
-3. Run `./scripts/setup-git-hooks.sh` after cloning
-4. Git hooks will automatically prevent committing real sensitive data
+1. Use the interactive prompts to configure SSO sessions - no files to manage
+2. All sensitive data stays local in your `~/.aws/config` file
+3. Review generated AWS profiles in `~/.aws/config` after running `kolja aws profiles`
+4. The repository contains no sensitive information by design
 
 ## 🤝 Contributing
 

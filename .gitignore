@@ -1,10 +1,5 @@
 
-# Ignore dynaconf secret files
-.secrets.*
-
-# Ignore local sensitive configuration files (keep templates with placeholders)
-settings.local.toml
-sso_session.local.template
+# No configuration files needed - tool uses interactive prompts
 
 # Build and cache directories
 dist/

@@ -1,111 +1,161 @@
 import click
 import subprocess
 import os
-from config import settings
 from kolja_aws.utils import (
     remove_block_from_config, 
     get_latest_tokens_by_region,
     get_sso_sessions,
-    get_section_metadata_from_template,
     construct_role_profile_section,
-    get_available_sso_sessions,
     get_sso_session_config,
 )
+from kolja_aws.interactive_config import InteractiveConfig
+from kolja_aws.session_config import SessionConfig
 
 
-aws_config = settings.AWS_CONFIG
+aws_config = "~/.aws/config"
 
 
 @click.group()
 def cli():
-    """Kolja CLI Tool for improve efficiency with aws."""
+    """Kolja CLI Tool for AWS SSO management with interactive configuration.
+    
+    This tool helps you manage AWS SSO sessions and profiles through
+    interactive prompts, eliminating the need for configuration files.
+    """
 
 
 @click.group()
 def aws():
-    """Development commands."""
+    """AWS SSO session and profile management commands.
+    
+    Use these commands to interactively configure SSO sessions,
+    login to AWS, and generate profiles for your accounts.
+    """
 
 
 @click.command()
-@click.argument('sso_sessions', nargs=-1)
-def set(sso_sessions):
-    """Set SSO session configuration with dynamic configuration support"""
-    available_sessions = get_available_sso_sessions()
+@click.argument('session_name')
+def set(session_name):
+    """Configure an SSO session through interactive prompts.
     
-    # If no parameters provided, show available sessions
-    if not sso_sessions:
-        print("Available SSO sessions:")
-        for session in available_sessions:
-            print(f"  - {session}")
-        print("\nUsage: kolja aws set <session_name> [<session_name2> ...]")
-        return
+    This command will guide you through entering:
+    - SSO start URL (e.g., https://xxx.awsapps.com/start)
+    - SSO region (e.g., ap-southeast-2, cn-northwest-1)
     
-    for sso_session in sso_sessions:
-        if sso_session not in available_sessions:
-            print(f"Warning: SSO session '{sso_session}' not found in configuration")
-            print(f"Available sessions: {', '.join(available_sessions)}")
-            continue
+    The system automatically sets registration scopes to 'sso:account:access'.
+    
+    Example:
+        kolja aws set my-company
+    """
+    try:
+        # Initialize interactive configuration system
+        interactive_config = InteractiveConfig()
+        
+        # Prompt user for SSO configuration parameters
+        session_config = interactive_config.prompt_sso_config(session_name)
+        
+        # Display configuration summary for user review
+        summary = interactive_config.get_config_summary(session_config, session_name)
+        click.echo(summary)
+        
+        # Confirm with user before applying configuration
+        if click.confirm("Apply this configuration?", default=True):
+            # Remove existing configuration if it exists
+            remove_block_from_config(os.path.expanduser(aws_config), f'sso-session {session_name}')
             
-        try:
-            # Remove existing configuration
-            remove_block_from_config(os.path.expanduser(aws_config), f'sso-session {sso_session}')
+            # Generate AWS config section content
+            section_content = session_config.to_aws_config_section(session_name)
             
-            # Use updated utility function to get configuration content (supports dynamic configuration)
-            section_content, _ = get_section_metadata_from_template(
-                os.path.expanduser(aws_config), f'sso-session {sso_session}'
-            )
-            
-            # Write configuration
+            # Write configuration to AWS config file
             with open(os.path.expanduser(aws_config), 'a') as fw:
                 fw.write('\n')  # Ensure line separator
                 fw.write(section_content)
                 fw.write('\n')  # Ensure ending line break
             
-            print(f"✅ SSO session '{sso_session}' configuration updated")
+            click.echo(click.style(f"✅ SSO session '{session_name}' configuration applied successfully!", fg='green'))
+        else:
+            click.echo("Configuration cancelled.")
             
-        except Exception as e:
-            print(f"❌ Failed to set SSO session '{sso_session}': {e}")
+    except click.Abort:
+        click.echo("\nConfiguration cancelled by user.")
+    except Exception as e:
+        click.echo(click.style(f"❌ Failed to set SSO session '{session_name}': {e}", fg='red'))
     
 
 @click.command()
 def get():
+    """List all configured SSO sessions.
+    
+    Shows all SSO sessions that have been configured through
+    the interactive 'kolja aws set' command.
+    
+    Example:
+        kolja aws get
+    """
     try:
         res = get_sso_sessions()
-    except UnboundLocalError:
-        print("pls set sso session first")
+        if not res:
+            click.echo("No SSO sessions found. Use 'kolja aws set <session_name>' to configure a session interactively.")
+        return res
+    except Exception as e:
+        click.echo(f"Error retrieving SSO sessions: {e}")
         return
-    return res
 
 
 @click.command()
 def login():
-    # aws sso login --sso-session xxx
-    sso_sessions = get_sso_sessions()
-    for i in sso_sessions:
-
-        result = subprocess.run(
-            ['aws', 'sso', 'login', '--sso-session', i], 
-            capture_output=True, 
-            text=True
-        )
-        
-        if result.returncode == 0:
-            print(f"Login successful for session: {i}")
-        else:
-            print(f"Login failed for session: {i}")
-            print(f"Error: {result.stderr}")
-            print(f"👀It is recommended to remove the local AWS_PROFILE environment variable and retry")
+    """Login to all configured SSO sessions.
+    
+    Attempts to authenticate with all SSO sessions that have been
+    configured through the interactive setup process.
+    
+    Example:
+        kolja aws login
+    """
+    try:
+        sso_sessions = get_sso_sessions()
+        if not sso_sessions:
+            click.echo("No SSO sessions found. Use 'kolja aws set <session_name>' to configure a session interactively first.")
+            return
+            
+        for session in sso_sessions:
+            click.echo(f"Logging into session: {session}")
+            result = subprocess.run(
+                ['aws', 'sso', 'login', '--sso-session', session], 
+                capture_output=True, 
+                text=True
+            )
+            
+            if result.returncode == 0:
+                click.echo(click.style(f"✅ Login successful for session: {session}", fg='green'))
+            else:
+                click.echo(click.style(f"❌ Login failed for session: {session}", fg='red'))
+                click.echo(f"Error: {result.stderr}")
+                click.echo("💡 Tip: Remove the AWS_PROFILE environment variable and retry if needed")
+                
+    except Exception as e:
+        click.echo(click.style(f"❌ Error during login process: {e}", fg='red'))
 
 
 @click.command()
 def profiles():
-    """Generate AWS profile sections in configuration file with dynamic configuration support"""
-    latest_token = get_latest_tokens_by_region()
+    """Generate AWS profile sections for all available accounts and roles.
     
+    Automatically discovers all accounts and roles accessible through
+    your configured SSO sessions and creates AWS profiles for them.
+    
+    Example:
+        kolja aws profiles
+    """
     try:
+        latest_token = get_latest_tokens_by_region()
         sso_sessions = get_sso_sessions()
-    except UnboundLocalError:
-        print("Please set SSO session first")
+        
+        if not sso_sessions:
+            click.echo("No SSO sessions found. Use 'kolja aws set <session_name>' to configure a session interactively first.")
+            return
+    except Exception as e:
+        click.echo(click.style(f"❌ Error initializing profiles command: {e}", fg='red'))
         return
     
     for sso_session in sso_sessions:
@@ -129,7 +179,6 @@ def profiles():
                     print(f"❌ Failed to get account list (session: {sso_session}): {result.stderr}")
                     continue
                 
-                # TODO: Persist account information into aws.config
                 accountList = eval(result.stdout)['accountList']
                 accountIdList = map(lambda x: x['accountId'], accountList)
                 

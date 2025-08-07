@@ -45,13 +45,13 @@ sso_registration_scopes = sso:account:access
     demo_data = [
         {
             "sso_session": "kolja-cn",
-            "account_id": "555286235540",
+            "account_id": "123456789012",
             "role_name": "AdminRole",
             "region": "cn-northwest-1"
         },
         {
             "sso_session": "kolja-cn", 
-            "account_id": "555286235540",
+            "account_id": "123456789012",
             "role_name": "ReadOnlyRole",
             "region": "cn-northwest-1"
         },
@@ -113,8 +113,8 @@ sso_registration_scopes = sso:account:access
             print()
     
     print("🔗 Usage with AWS Profile Switchers:")
-    print("   aws --profile 555286235540-AdminRole s3 ls")
-    print("   assume 555286235540-ReadOnlyRole")
+    print("   aws --profile 123456789012-AdminRole s3 ls")
+    print("   assume 123456789012-ReadOnlyRole")
     print("   granted assume 987654321098-DeveloperRole")
     
     # Clean up

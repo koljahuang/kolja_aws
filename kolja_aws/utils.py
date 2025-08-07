@@ -3,12 +3,9 @@ import os
 import re
 import json
 from datetime import datetime
-from config import settings
-from io import StringIO
-import tempfile
 
 
-aws_config = settings.AWS_CONFIG
+aws_config = "~/.aws/config"
 
 
 def remove_block_from_config(file_path, section):
@@ -69,157 +66,15 @@ def get_latest_tokens_by_region(cache_dir="~/.aws/sso/cache"):
 
 
 
-def _generate_dynamic_sso_template():
-    """
-    Dynamically generate SSO session template content from settings.toml
-    
-    Returns:
-        str: Generated SSO session template content
-    """
-    try:
-        # Check if settings has sso_sessions configuration
-        if hasattr(settings, 'sso_sessions') and settings.sso_sessions:
-            template_content = ""
-            
-            for session_name, session_config in settings.sso_sessions.items():
-                # Validate required configuration fields
-                if not all(key in session_config for key in ['sso_start_url', 'sso_region']):
-                    continue
-                
-                # Set default registration_scopes
-                registration_scopes = session_config.get('sso_registration_scopes', 'sso:account:access')
-                
-                # Generate configuration block
-                template_content += f"[sso-session {session_name}]\n"
-                template_content += f"sso_start_url = {session_config['sso_start_url']}\n"
-                template_content += f"sso_region = {session_config['sso_region']}\n"
-                template_content += f"sso_registration_scopes = {registration_scopes}\n\n"
-            
-            return template_content.strip()
-    except Exception as e:
-        print(f"Warning: Failed to generate dynamic SSO template: {e}")
-    
-    # If dynamic generation fails, fallback to reading template file
-    template_file = os.path.join(os.path.dirname(__file__), 'sso_session.template')
-    try:
-        with open(template_file, 'r') as f:
-            return f.read()
-    except Exception as e:
-        print(f"Warning: Failed to read template file: {e}")
-        return ""
 
 
-def get_section_metadata_from_template(config_file, section):
-    """
-    Get section metadata from configuration file or dynamically generated template
-    
-    Args:
-        config_file (str): configuration path
-        section (str): section name
-    
-    Returns:
-        tuple: (section content as string format, section content as dict)
-    """
-    config = configparser.ConfigParser()
-    
-    # First try to read from actual configuration file
-    if os.path.exists(config_file):
-        config.read(config_file)
-        
-        if section in config:
-            section_dict = dict(config[section])
-            
-            section_string = StringIO()
-            config.write(section_string)
-            section_string.seek(0)
-            
-            section_lines = []
-            in_target_section = False
-            for line in section_string:
-                line = line.strip()
-                if line.startswith(f"[{section}]"):
-                    in_target_section = True
-                elif line.startswith("[") and in_target_section:
-                    break
-                if in_target_section:
-                    section_lines.append(line)
-            
-            return "\n".join(section_lines), section_dict
-    
-    # If section not found in configuration file, try to get from dynamically generated template
-    dynamic_template = _generate_dynamic_sso_template()
-    if dynamic_template:
-        # Create temporary file to parse dynamically generated template
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.conf', delete=False) as temp_file:
-            temp_file.write(dynamic_template)
-            temp_file_path = temp_file.name
-        
-        try:
-            temp_config = configparser.ConfigParser()
-            temp_config.read(temp_file_path)
-            
-            if section in temp_config:
-                section_dict = dict(temp_config[section])
-                
-                section_string = StringIO()
-                temp_config.write(section_string)
-                section_string.seek(0)
-                
-                section_lines = []
-                in_target_section = False
-                for line in section_string:
-                    line = line.strip()
-                    if line.startswith(f"[{section}]"):
-                        in_target_section = True
-                    elif line.startswith("[") and in_target_section:
-                        break
-                    if in_target_section:
-                        section_lines.append(line)
-                
-                return "\n".join(section_lines), section_dict
-        finally:
-            # Clean up temporary file
-            try:
-                os.unlink(temp_file_path)
-            except:
-                pass
-    
-    raise ValueError(f"Section '{section}' not found in the configuration file or dynamic template.")
 
 
-def get_available_sso_sessions():
-    """
-    Get all available SSO session names with dynamic configuration support
-    
-    Returns:
-        list: SSO session name list
-    """
-    sessions = []
-    
-    # First try to get from dynamic configuration
-    try:
-        if hasattr(settings, 'sso_sessions') and settings.sso_sessions:
-            sessions.extend(settings.sso_sessions.keys())
-            return sessions
-    except Exception as e:
-        print(f"Warning: Failed to get sessions from dynamic config: {e}")
-    
-    # Fallback to getting from template file
-    template_file = os.path.join(os.path.dirname(__file__), 'sso_session.template')
-    try:
-        with open(template_file, 'r') as f:
-            content = f.read()
-        matches = re.findall(r'\[sso-session (\S+)\]', content)
-        sessions.extend(matches)
-    except Exception as e:
-        print(f"Warning: Failed to read template file: {e}")
-    
-    return sessions
 
 
 def get_sso_session_config(session_name):
     """
-    Get specified SSO session configuration information with dynamic configuration support
+    Get specified SSO session configuration information from AWS config file
     
     Args:
         session_name (str): SSO session name
@@ -227,30 +82,16 @@ def get_sso_session_config(session_name):
     Returns:
         dict: SSO session configuration information
     """
-    # First try to get from dynamic configuration
-    try:
-        if hasattr(settings, 'sso_sessions') and settings.sso_sessions:
-            if session_name in settings.sso_sessions:
-                config = dict(settings.sso_sessions[session_name])
-                # Ensure default registration_scopes
-                if 'sso_registration_scopes' not in config:
-                    config['sso_registration_scopes'] = 'sso:account:access'
-                return config
-    except Exception as e:
-        print(f"Warning: Failed to get session config from dynamic config: {e}")
-    
-    # Fallback to getting from template file
-    template_file = os.path.join(os.path.dirname(__file__), 'sso_session.template')
     try:
         config = configparser.ConfigParser()
-        config.read(template_file)
+        config.read(os.path.expanduser(aws_config))
         section_name = f"sso-session {session_name}"
         if section_name in config:
             return dict(config[section_name])
     except Exception as e:
-        print(f"Warning: Failed to read session config from template: {e}")
+        print(f"Warning: Failed to read session config from AWS config: {e}")
     
-    raise ValueError(f"SSO session '{session_name}' not found in configuration")
+    raise ValueError(f"SSO session '{session_name}' not found in AWS configuration")
 
 
 def construct_role_profile_section(file_path, section,
@@ -273,31 +114,9 @@ output = text
     print(f"Updated section: profile {profile_name}")
 
 
-def write_dynamic_sso_template_to_file(output_path=None):
-    """
-    Write dynamically generated SSO template to file
-    
-    Args:
-        output_path (str, optional): Output file path, defaults to sso_session.template
-        
-    Returns:
-        str: Written file path
-    """
-    if output_path is None:
-        output_path = os.path.join(os.path.dirname(__file__), 'sso_session.template')
-    
-    template_content = _generate_dynamic_sso_template()
-    
-    if template_content:
-        with open(output_path, 'w') as f:
-            f.write(template_content)
-        print(f"Dynamic SSO template written to: {output_path}")
-        return output_path
-    else:
-        raise ValueError("Failed to generate dynamic SSO template content")
+
 
 
 
 if __name__ == "__main__":
     print(get_latest_tokens_by_region())
-    # print(get_section_metadata_from_template("/Users/huangchao/.aws/config", "sso-session kolja"))

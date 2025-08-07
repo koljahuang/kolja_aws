@@ -29,28 +29,6 @@ files = [
 markers = {main = "platform_system == \"Windows\"", dev = "sys_platform == \"win32\""}
 
 [[package]]
-name = "dynaconf"
-version = "3.2.6"
-description = "The dynamic configurator for your Python Project"
-optional = false
-python-versions = ">=3.8"
-groups = ["main"]
-files = [
-    {file = "dynaconf-3.2.6-py2.py3-none-any.whl", hash = "sha256:3911c740d717df4576ed55f616c7cbad6e06bc8ef23ffca444b6e2a12fb1c34c"},
-    {file = "dynaconf-3.2.6.tar.gz", hash = "sha256:74cc1897396380bb957730eb341cc0976ee9c38bbcb53d3307c50caed0aedfb8"},
-]
-
-[package.extras]
-all = ["configobj", "hvac", "redis", "ruamel.yaml"]
-configobj = ["configobj"]
-ini = ["configobj"]
-redis = ["redis"]
-test = ["configobj", "django", "flask (>=0.12)", "hvac (>=1.1.0)", "pytest", "pytest-cov", "pytest-mock", "pytest-xdist", "python-dotenv", "radon", "redis", "toml"]
-toml = ["toml"]
-vault = ["hvac"]
-yaml = ["ruamel.yaml"]
-
-[[package]]
 name = "exceptiongroup"
 version = "1.3.0"
 description = "Backport of PEP 654 (exception groups)"
@@ -191,4 +169,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.8"
-content-hash = "bd54e896f6835b33593bfbf9ac8b0fbd218e6a9d3b3c652568c08d96f226d3d1"
+content-hash = "477a1f91155ed42ca52ef76e31aa5fd05ef32d6c677a6a922ecdff219d6df91f"
