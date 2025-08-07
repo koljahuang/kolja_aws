@@ -13,16 +13,30 @@ from urllib.parse import urlparse
 class URLValidator:
     """Validator for SSO start URLs"""
     
+    # URL pattern regex - matches http/https URLs with domain
+    URL_PATTERN = re.compile(
+        r'^https?://'  # http:// or https://
+        r'(?:'  # start of domain group
+        r'(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)*'  # domain parts
+        r'[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?'  # final domain part
+        r'|'  # or
+        r'localhost'  # localhost
+        r')'  # end of domain group
+        r'(?::\d+)?'  # optional port
+        r'(?:/[^\s]*)?$',  # optional path
+        re.IGNORECASE
+    )
+    
     @staticmethod
     def is_valid_sso_url(url: str) -> bool:
         """
-        Validate SSO start URL format - checks if it's a proper URL
+        Validate SSO start URL format using regex pattern
         
         Args:
             url: The URL to validate
             
         Returns:
-            bool: True if URL is valid, False otherwise
+            bool: True if URL matches valid URL pattern, False otherwise
         """
         if not url or not isinstance(url, str):
             return False
@@ -31,12 +45,7 @@ class URLValidator:
         if not url:
             return False
             
-        try:
-            parsed = urlparse(url)
-            # Check if it has a valid scheme (http/https) and netloc (domain)
-            return bool(parsed.scheme in ('http', 'https') and parsed.netloc)
-        except Exception:
-            return False
+        return bool(URLValidator.URL_PATTERN.match(url))
 
 
 class RegionValidator:
