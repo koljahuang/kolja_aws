@@ -10,6 +10,7 @@ from kolja_aws.utils import (
 )
 from kolja_aws.interactive_config import InteractiveConfig
 from kolja_aws.session_config import SessionConfig
+from kolja_aws.shell_installer import ShellInstaller
 
 
 aws_config = "~/.aws/config"
@@ -212,8 +213,68 @@ def profiles():
         
         except Exception as e:
             print(f"❌ Failed to process SSO session '{sso_session}': {e}")
-                
+
+
+@click.command()
+@click.option('--uninstall', is_flag=True, help='Uninstall shell integration')
+@click.option('--status', is_flag=True, help='Check installation status')
+def sp(uninstall, status):
+    """Install shell integration for quick AWS profile switching.
     
+    This command installs a shell function 'sp' that provides an interactive
+    AWS profile switcher. After installation, you can use 'sp' in your terminal
+    to quickly switch between AWS profiles.
+    
+    Examples:
+        kolja aws sp              # Install shell integration
+        kolja aws sp --status     # Check installation status
+        kolja aws sp --uninstall  # Remove shell integration
+    """
+    try:
+        installer = ShellInstaller()
+        
+        if status:
+            # Show installation status
+            status_info = installer.get_installation_status()
+            
+            if status_info.get('installed', False):
+                click.echo(click.style("✅ Shell integration is installed", fg='green'))
+                click.echo(f"Shell type: {status_info.get('shell_type', 'unknown')}")
+                click.echo(f"Config file: {status_info.get('config_file', 'unknown')}")
+                
+                backup_count = status_info.get('backup_count', 0)
+                if backup_count > 0:
+                    click.echo(f"Backups available: {backup_count}")
+            else:
+                click.echo(click.style("❌ Shell integration is not installed", fg='red'))
+                if 'error' in status_info:
+                    click.echo(f"Error: {status_info['error']}")
+                    
+        elif uninstall:
+            # Uninstall shell integration
+            click.echo("🗑️  Uninstalling shell integration...")
+            
+            if installer.uninstall():
+                click.echo(click.style("✅ Shell integration uninstalled successfully!", fg='green'))
+            else:
+                click.echo(click.style("❌ Failed to uninstall shell integration", fg='red'))
+                
+        else:
+            # Install shell integration
+            click.echo("🚀 Installing shell integration...")
+            
+            if installer.install():
+                click.echo(click.style("✅ Shell integration installed successfully!", fg='green'))
+                click.echo("\n💡 To start using the profile switcher:")
+                click.echo("1. Reload your shell or run: source ~/.bashrc")
+                click.echo("2. Use the 'sp' command to switch AWS profiles")
+            else:
+                click.echo(click.style("❌ Failed to install shell integration", fg='red'))
+                click.echo("\n💡 You can try the manual installation script:")
+                click.echo("kolja-install-shell --interactive")
+                
+    except Exception as e:
+        click.echo(click.style(f"❌ Error: {e}", fg='red'))
 
 
 # register command
@@ -221,6 +282,7 @@ aws.add_command(login)
 aws.add_command(get)
 aws.add_command(set)
 aws.add_command(profiles)
+aws.add_command(sp)
 cli.add_command(aws)
 
 # aws sso list-accounts --access-token  --region cn-north-1 --output json
