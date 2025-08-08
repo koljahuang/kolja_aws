@@ -20,13 +20,16 @@ class ScriptGenerator:
     
     def generate_bash_script(self) -> str:
         """生成 Bash/Zsh 兼容脚本"""
+        # Determine the correct Python executable
+        python_cmd = self._get_python_command()
+        
         script = f"""{self.install_marker_start}
 sp() {{
     # Create a temporary file to store the selected profile
     local temp_file=$(mktemp)
     
     # Run Python script with proper terminal I/O
-    python3 -c "
+    {python_cmd} -c "
 import sys
 import os
 from kolja_aws.shell_integration import show_interactive_menu
@@ -75,13 +78,16 @@ except Exception as e:
     
     def generate_fish_script(self) -> str:
         """生成 Fish shell 脚本"""
+        # Determine the correct Python executable
+        python_cmd = self._get_python_command()
+        
         script = f"""{self.install_marker_start}
 function sp
     # Create a temporary file to store the selected profile
     set temp_file (mktemp)
     
     # Run Python script with proper terminal I/O
-    python3 -c "
+    {python_cmd} -c "
 import sys
 import os
 from kolja_aws.shell_integration import show_interactive_menu
@@ -243,15 +249,44 @@ interactive menu. Use arrow keys to navigate and Enter to select.
         
         return instructions.strip()
     
+    def _get_python_command(self) -> str:
+        """获取正确的 Python 命令"""
+        try:
+            # Try to detect if we're running from a uv tool installation
+            import kolja_aws
+            kolja_path = kolja_aws.__file__
+            
+            # Check if this is a uv tool installation
+            if '.local/share/uv/tools/' in kolja_path:
+                # Extract the tool name and construct the Python path
+                import re
+                match = re.search(r'\.local/share/uv/tools/([^/]+)/', kolja_path)
+                if match:
+                    tool_name = match.group(1)
+                    home_dir = os.path.expanduser('~')
+                    python_path = f"{home_dir}/.local/share/uv/tools/{tool_name}/bin/python"
+                    if os.path.exists(python_path):
+                        return python_path
+            
+            # Fallback to system python
+            return "python3"
+            
+        except ImportError:
+            # Development environment fallback
+            return "python3"
+    
     def _get_kolja_aws_path(self) -> str:
         """获取 kolja_aws 模块的路径"""
         try:
             import kolja_aws
-            return os.path.dirname(kolja_aws.__file__)
+            # Return the parent directory of kolja_aws module (project root)
+            kolja_aws_dir = os.path.dirname(kolja_aws.__file__)
+            return os.path.dirname(kolja_aws_dir)
         except ImportError:
             # Fallback: try to determine from current file location
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            return current_dir
+            # Go up one level to get project root
+            return os.path.dirname(current_dir)
     
     def _escape_path_for_shell(self, path: str, shell_type: str) -> str:
         """为 shell 脚本转义路径"""

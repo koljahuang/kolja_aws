@@ -13,10 +13,33 @@ from kolja_aws.session_config import SessionConfig
 from kolja_aws.shell_installer import ShellInstaller
 
 
+def get_version():
+    """Get the current version of kolja-aws"""
+    try:
+        # Try importlib.metadata first (Python 3.8+)
+        from importlib.metadata import version
+        return version("kolja-aws")
+    except Exception:
+        try:
+            # Fallback to pkg_resources
+            import pkg_resources
+            return pkg_resources.get_distribution("kolja-aws").version
+        except Exception:
+            pass
+    
+    # Final fallback: read from version file
+    try:
+        from kolja_aws.__version__ import __version__
+        return f"{__version__}"
+    except Exception:
+        return "unknown"
+
+
 aws_config = "~/.aws/config"
 
 
 @click.group()
+@click.version_option(version=get_version(), prog_name="kolja")
 def cli():
     """Kolja CLI Tool for AWS SSO management with interactive configuration.
     
@@ -252,22 +275,19 @@ def sp(uninstall, status):
                     
         elif uninstall:
             # Uninstall shell integration
-            click.echo("🗑️  Uninstalling shell integration...")
-            
+            # Note: installer.uninstall() will show its own progress messages
             if installer.uninstall():
-                click.echo(click.style("✅ Shell integration uninstalled successfully!", fg='green'))
+                # Success message is already shown by installer.uninstall()
+                pass
             else:
                 click.echo(click.style("❌ Failed to uninstall shell integration", fg='red'))
                 
         else:
             # Install shell integration
-            click.echo("🚀 Installing shell integration...")
-            
+            # Note: installer.install() will show its own progress messages
             if installer.install():
-                click.echo(click.style("✅ Shell integration installed successfully!", fg='green'))
-                click.echo("\n💡 To start using the profile switcher:")
-                click.echo("1. Reload your shell or run: source ~/.bashrc")
-                click.echo("2. Use the 'sp' command to switch AWS profiles")
+                # Success message is already shown by installer.install()
+                pass
             else:
                 click.echo(click.style("❌ Failed to install shell integration", fg='red'))
                 click.echo("\n💡 You can try the manual installation script:")

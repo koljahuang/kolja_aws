@@ -28,8 +28,7 @@ class TestCLIIntegration:
         
         # Verify
         assert result.exit_code == 0
-        assert "Installing shell integration" in result.output
-        assert "✅ Shell integration installed successfully!" in result.output
+        # Note: The actual installation messages come from ShellInstaller, not CLI
         mock_installer.install.assert_called_once()
     
     @patch('kolja_aws.kolja_login.ShellInstaller')
@@ -61,8 +60,7 @@ class TestCLIIntegration:
         
         # Verify
         assert result.exit_code == 0
-        assert "Uninstalling shell integration" in result.output
-        assert "✅ Shell integration uninstalled successfully!" in result.output
+        # Note: The actual uninstallation messages come from ShellInstaller, not CLI
         mock_installer.uninstall.assert_called_once()
     
     @patch('kolja_aws.kolja_login.ShellInstaller')

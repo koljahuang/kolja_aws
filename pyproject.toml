@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "kolja-aws"
-version = "0.4.0"
+version = "0.4.3"
 description = "AWS SSO CLI Tool"
 authors = ["Kolja Huang <koljahuang@gmail.com>"]
 readme = "README.md"
