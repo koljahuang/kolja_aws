@@ -48,7 +48,8 @@ def main():
                 config_file = detector.get_config_file(shell_type)
                 success_text.append(f"source {config_file}", style="bold cyan")
             except:
-                success_text.append("source ~/.bashrc", style="bold cyan")
+                success_text.append("source your shell config file", style="bold cyan")
+                success_text.append(" (e.g., ~/.bashrc, ~/.zshrc)", style="dim")
             
             success_text.append(" (or restart your terminal)\n", style="dim")
             success_text.append("2. Use the command: ", style="dim")
